@@ -1,91 +1,78 @@
 <!doctype html>
-<html lang="en">
+<html lang="it">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Modern client-side IP, connection and WHOIS/RDAP inspector.">
-  <title>IP Inspector</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sonda — cosa vede la rete di te</title>
+<meta name="description" content="Scopri il tuo indirizzo IPv4 e IPv6, la geolocalizzazione stimata, l'hostname risolto e se stai navigando tramite proxy o VPN. Tutto nel browser, nessun dato salvato.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><circle cx=%2216%22 cy=%2216%22 r=%226%22 fill=%22%23eaa93f%22/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="bg"></div>
-  <header class="topbar">
-    <a class="brand" href="#">
-      <span class="brand-mark">⌁</span>
-      <span>IP Inspector</span>
-    </a>
-    <span class="status"><i></i> Static / GitHub Pages ready</span>
-  </header>
 
-  <main class="container">
-    <section class="hero">
-      <div>
-        <p class="eyebrow">CONNECTION DIAGNOSTICS</p>
-        <h1>Know how the internet sees you.</h1>
-        <p class="subtitle">
-          Your public IPs, geolocation, reverse DNS and proxy/VPN indicators —
-          directly from your browser.
-        </p>
-      </div>
-      <button id="refreshBtn" class="button primary">↻ Refresh</button>
-    </section>
+<div class="topbar">
+  <a class="brand" href="index.html">
+    <span class="dot" aria-hidden="true"></span>
+    <span class="brand-name">sonda</span>
+    <span class="brand-tag">/ diagnostica di rete</span>
+  </a>
+  <nav class="pages" aria-label="Sezioni">
+    <a href="index.html">connessione</a>
+    <a href="whois.html">whois</a>
+  </nav>
+</div>
 
-    <section id="ipGrid" class="ip-grid" aria-live="polite">
-      <article class="card ip-card loading">
-        <div class="card-head"><span>IPv4</span><span class="pill">checking</span></div>
-        <div class="skeleton big"></div>
-        <div class="skeleton"></div>
-      </article>
-      <article class="card ip-card loading">
-        <div class="card-head"><span>IPv6</span><span class="pill">checking</span></div>
-        <div class="skeleton big"></div>
-        <div class="skeleton"></div>
-      </article>
-    </section>
+<main class="shell">
 
-    <section class="section-head">
-      <div>
-        <p class="eyebrow">CONNECTION</p>
-        <h2>How are you connected?</h2>
-      </div>
-    </section>
-    <section id="connectionCard" class="card connection-card">
-      <div class="connection-main">
-        <div id="connectionIcon" class="connection-icon">?</div>
-        <div>
-          <h3 id="connectionTitle">Checking connection…</h3>
-          <p id="connectionText">Collecting information from public IP services.</p>
-        </div>
-      </div>
-      <div id="connectionDetails" class="details-grid"></div>
-    </section>
+  <section class="hero">
+    <p class="hero-label">Il tuo indirizzo IPv4</p>
+    <p class="hero-ip" id="ipv4-hero">in rilevamento<span class="cursor" aria-hidden="true"></span></p>
+    <p class="hero-sub" id="ipv6-line">IPv6: verifica in corso…</p>
+  </section>
 
-    <section class="section-head whois-head">
-      <div>
-        <p class="eyebrow">RDAP / WHOIS</p>
-        <h2>Look up an IP or domain</h2>
-        <p>Uses the public RDAP ecosystem. No server-side component is required.</p>
-      </div>
-    </section>
+  <h2 class="section-title">Geolocalizzazione stimata</h2>
+  <p class="section-desc">Dati derivati dal blocco di rete a cui appartiene il tuo IP, non dal GPS del dispositivo: la precisione varia da paese a città, raramente oltre.</p>
+  <dl class="manifest" id="geo-manifest">
+    <div class="row"><dt>Paese</dt><dd class="pending" data-field="country">in attesa…</dd></div>
+    <div class="row"><dt>Regione / città</dt><dd class="pending" data-field="city">in attesa…</dd></div>
+    <div class="row"><dt>Fuso orario</dt><dd class="pending" data-field="tz">in attesa…</dd></div>
+  </dl>
 
-    <section class="card lookup">
-      <form id="lookupForm">
-        <label for="lookupInput">IP address or domain</label>
-        <div class="search-row">
-          <input id="lookupInput" autocomplete="off" spellcheck="false"
-                 placeholder="e.g. 1.1.1.1 or example.com" required>
-          <button class="button primary" type="submit">Look up</button>
-        </div>
-      </form>
-      <div id="lookupResult" class="lookup-result hidden"></div>
-    </section>
+  <h2 class="section-title">Rete e provider</h2>
+  <p class="section-desc">A chi appartiene il blocco IP da cui ti stai collegando, e il nome host associato al tuo indirizzo, se pubblicato.</p>
+  <dl class="manifest" id="net-manifest">
+    <div class="row"><dt>Provider / organizzazione</dt><dd class="pending" data-field="isp">in attesa…</dd></div>
+    <div class="row"><dt>ASN</dt><dd class="pending" data-field="asn">in attesa…</dd></div>
+    <div class="row"><dt>Hostname risolto (rDNS)</dt><dd class="pending" data-field="hostname">in attesa…</dd></div>
+  </dl>
 
-    <footer>
-      <span>IP Inspector · static client-side application</span>
-      <span>IP/geo data provided by public services · RDAP for registration data</span>
-    </footer>
-  </main>
+  <h2 class="section-title">Anonimizzazione rilevata</h2>
+  <p class="section-desc">Indicatori euristici, non una prova: alcune reti aziendali o mobili possono comparire come proxy per come instradano il traffico.</p>
+  <div class="badge-row" id="security-badges">
+    <span class="badge unknown" data-badge="proxy"><span class="led"></span>proxy: in attesa…</span>
+    <span class="badge unknown" data-badge="vpn"><span class="led"></span>vpn: in attesa…</span>
+    <span class="badge unknown" data-badge="tor"><span class="led"></span>tor: in attesa…</span>
+    <span class="badge unknown" data-badge="hosting"><span class="led"></span>hosting/datacenter: in attesa…</span>
+  </div>
 
-  <script src="app.js"></script>
+  <p class="note">
+    Nessun dato viene inviato a un server proprio: questa pagina interroga direttamente dal tuo browser i servizi pubblici
+    <a href="https://www.ipify.org/" target="_blank" rel="noopener">ipify</a>,
+    <a href="https://ipwhois.io/" target="_blank" rel="noopener">ipwho.is</a> e
+    <a href="https://developers.google.com/speed/public-dns/docs/doh" target="_blank" rel="noopener">Google DNS-over-HTTPS</a>.
+    Nulla viene salvato da questo sito: è pagine statiche, senza backend.
+  </p>
+
+</main>
+
+<footer class="page-footer">
+  sonda — pagina statica, nessun tracciamento proprio, ospitabile su GitHub Pages.
+</footer>
+
+<script src="js/common.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>

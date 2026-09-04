@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sonda — whois per IP e domini</title>
+<meta name="description" content="Interroga i registri RDAP per un indirizzo IP o un dominio: registrar, date di scadenza, name server, blocco di rete e organizzazione assegnataria.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><circle cx=%2216%22 cy=%2216%22 r=%226%22 fill=%22%23eaa93f%22/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="topbar">
+  <a class="brand" href="index.html">
+    <span class="dot" aria-hidden="true"></span>
+    <span class="brand-name">sonda</span>
+    <span class="brand-tag">/ diagnostica di rete</span>
+  </a>
+  <nav class="pages" aria-label="Sezioni">
+    <a href="index.html">connessione</a>
+    <a href="whois.html">whois</a>
+  </nav>
+</div>
+
+<main class="shell">
+
+  <section class="hero" style="padding-bottom:26px;">
+    <p class="hero-label">whois</p>
+    <p class="hero-sub" style="margin-bottom:0; font-size:0.95rem; color:var(--muted);">
+      Inserisci un indirizzo IP o un nome di dominio: la pagina interroga il registro RDAP competente e mostra chi lo gestisce.
+    </p>
+  </section>
+
+  <form id="whois-form" class="terminal-input" style="margin-top:22px;" autocomplete="off">
+    <span class="prompt" aria-hidden="true">&gt;</span>
+    <label for="query" class="sr-only" style="position:absolute; left:-9999px;">Indirizzo IP o dominio</label>
+    <input id="query" name="query" type="text" placeholder="es. wikipedia.org oppure 8.8.8.8" spellcheck="false">
+    <button type="submit" id="submit-btn">Interroga</button>
+  </form>
+  <p class="examples">
+    prova:
+    <button type="button" data-example="wikipedia.org">wikipedia.org</button>
+    <button type="button" data-example="8.8.8.8">8.8.8.8</button>
+    <button type="button" data-example="2001:4860:4860::8888">2001:4860:4860::8888</button>
+  </p>
+
+  <div id="result" class="result-block" hidden>
+    <div class="result-head">
+      <h2 class="section-title" style="margin:0;" id="result-title">Risultato</h2>
+      <span class="source-tag" id="result-source"></span>
+    </div>
+    <div id="status-line" class="status-line"></div>
+    <dl class="manifest" id="result-manifest"></dl>
+    <details class="raw" id="raw-details" hidden>
+      <summary>Risposta RDAP completa (JSON)</summary>
+      <pre id="raw-json"></pre>
+    </details>
+  </div>
+
+  <p class="note">
+    I dati arrivano dal protocollo <a href="https://about.rdap.org/" target="_blank" rel="noopener">RDAP</a>, il successore standardizzato del whois classico,
+    instradato tramite <a href="https://rdap.org/" target="_blank" rel="noopener">rdap.org</a> verso il registro competente (IANA, RIPE, ARIN, Verisign, ecc.).
+    Alcuni registri non abilitano l'accesso diretto dal browser (CORS): in quel caso la pagina lo segnala e propone un link per aprire la stessa interrogazione altrove.
+  </p>
+
+</main>
+
+<footer class="page-footer">
+  sonda — pagina statica, nessun tracciamento proprio, ospitabile su GitHub Pages.
+</footer>
+
+<script src="js/common.js"></script>
+<script src="js/whois.js"></script>
+</body>
+</html>
