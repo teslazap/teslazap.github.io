@@ -1,7 +1,4 @@
-/* ============================================
-   PROBE - Modern SPA Application
-   Network Diagnostics Tool
-   ============================================ */
+/* PROBE - Network Diagnostics Application */
 
 const app = {
     data: {
@@ -9,12 +6,11 @@ const app = {
         ipv6: null,
         geo: {},
         security: {},
-        whoisData: null,
     },
     currentPage: 'scanner',
 
     async init() {
-        console.log('🚀 PROBE initialized');
+        console.log('PROBE initialized');
         this.navigate('scanner');
         this.fetchAllData();
     },
@@ -41,18 +37,15 @@ const app = {
                 content.innerHTML = this.renderAbout();
                 break;
         }
-
-        this.attachEventListeners();
     },
 
     renderScanner() {
         const ipv6Status = this.data.ipv6 ? `IPv6: ${this.data.ipv6}` : 'IPv6: Not available';
         
         return `
-            <!-- Hero Section -->
             <section class="hero-section">
                 <p class="hero-label">Your IP Address</p>
-                <p class="hero-ip" id="hero-ip-display">${this.data.ipv4 || 'detecting…'}</p>
+                <p class="hero-ip">${this.data.ipv4 || 'Detecting...'}</p>
                 <p class="hero-sub">${ipv6Status}</p>
                 <div class="hero-action">
                     <button class="btn btn-primary" onclick="app.fetchAllData()">
@@ -64,37 +57,31 @@ const app = {
                 </div>
             </section>
 
-            <!-- Geolocation Section -->
             <section class="max-w-7xl mx-auto px-6 py-12">
-                <h2 class="text-3xl font-bold mb-2 text-white">Estimated Geolocation</h2>
-                <p class="text-slate-400 mb-8">Data derived from the IP network block. Accuracy varies from country to city level.</p>
-                
+                <h2 class="text-3xl font-bold mb-2">Geolocation</h2>
+                <p class="text-slate-400 mb-8">Estimated location based on your IP network block.</p>
                 <div class="grid-responsive">
-                    ${this.createGeoCard('🌍', 'Country', this.data.geo.country || 'detecting…')}
-                    ${this.createGeoCard('🏙️', 'City', this.data.geo.city || 'detecting…')}
-                    ${this.createGeoCard('⏰', 'Timezone', this.data.geo.timezone || 'detecting…')}
-                    ${this.createGeoCard('📍', 'Coordinates', (this.data.geo.latitude && this.data.geo.longitude) ? `${this.data.geo.latitude.toFixed(4)}, ${this.data.geo.longitude.toFixed(4)}` : 'detecting…')}
+                    ${this.createCard('🌍', 'Country', this.data.geo.country || 'Detecting...')}
+                    ${this.createCard('🏙️', 'City', this.data.geo.city || 'Detecting...')}
+                    ${this.createCard('⏰', 'Timezone', this.data.geo.timezone || 'Detecting...')}
+                    ${this.createCard('📍', 'Coordinates', (this.data.geo.latitude && this.data.geo.longitude) ? `${this.data.geo.latitude.toFixed(4)}, ${this.data.geo.longitude.toFixed(4)}` : 'Detecting...')}
                 </div>
             </section>
 
-            <!-- Network Section -->
             <section class="max-w-7xl mx-auto px-6 py-12">
-                <h2 class="text-3xl font-bold mb-2 text-white">Network & Provider</h2>
-                <p class="text-slate-400 mb-8">Information about your IP network block and associated hostname.</p>
-                
+                <h2 class="text-3xl font-bold mb-2">Network & Provider</h2>
+                <p class="text-slate-400 mb-8">Information about your ISP and network.</p>
                 <div class="grid-responsive">
-                    ${this.createNetCard('🏢', 'Provider', this.data.geo.isp || 'detecting…')}
-                    ${this.createNetCard('🔢', 'ASN', this.data.geo.asn || 'detecting…')}
-                    ${this.createNetCard('🌐', 'Hostname', this.data.geo.hostname || 'detecting…')}
-                    ${this.createNetCard('📊', 'Connection Type', this.data.geo.connection_type || 'detecting…')}
+                    ${this.createCard('🏢', 'Provider/ISP', this.data.geo.isp || 'Detecting...')}
+                    ${this.createCard('🔢', 'ASN', this.data.geo.asn || 'Detecting...')}
+                    ${this.createCard('🌐', 'Hostname', this.data.geo.hostname || 'Detecting...')}
+                    ${this.createCard('📊', 'Connection Type', this.data.geo.connection_type || 'Detecting...')}
                 </div>
             </section>
 
-            <!-- Security Section -->
             <section class="max-w-7xl mx-auto px-6 py-12">
-                <h2 class="text-3xl font-bold mb-2 text-white">Anonymization Detection</h2>
-                <p class="text-slate-400 mb-8">Heuristic indicators, not a scientific proof of security.</p>
-                
+                <h2 class="text-3xl font-bold mb-2">Security Indicators</h2>
+                <p class="text-slate-400 mb-8">Heuristic detection - not a guarantee of security.</p>
                 <div class="grid-responsive">
                     ${this.createSecurityCard('🔐', 'Proxy', this.data.security.proxy)}
                     ${this.createSecurityCard('🛡️', 'VPN', this.data.security.vpn)}
@@ -103,16 +90,15 @@ const app = {
                 </div>
             </section>
 
-            <!-- Privacy Info -->
-            <section class="max-w-7xl mx-auto px-6 py-12">
+            <section class="max-w-7xl mx-auto px-6 py-12 pb-12">
                 <div class="card bg-gradient-to-r from-orange-600/10 to-red-600/10 border-orange-500/30">
                     <p class="text-sm text-slate-300">
-                        <strong>🔒 Privacy:</strong> No data is sent to a private server. 
-                        This page queries directly from your browser the public services 
-                        <a href="https://www.ipify.org/" target="_blank" class="text-orange-400 hover:text-orange-300">ipify</a>,
-                        <a href="https://ipwho.is/" target="_blank" class="text-orange-400 hover:text-orange-300">ipwho.is</a> and
-                        <a href="https://rdap.org/" target="_blank" class="text-orange-400 hover:text-orange-300">RDAP</a>.
-                        Nothing is saved: static pages, no backend.
+                        <strong>🔒 Privacy:</strong> No data sent to private servers. 
+                        This page queries public services: 
+                        <a href="https://www.ipify.org/" target="_blank">ipify</a>,
+                        <a href="https://ipwho.is/" target="_blank">ipwho.is</a>, and
+                        <a href="https://rdap.org/" target="_blank">RDAP</a>.
+                        Nothing is saved - static pages, no backend.
                     </p>
                 </div>
             </section>
@@ -122,13 +108,13 @@ const app = {
     renderWhois() {
         return `
             <section class="max-w-7xl mx-auto px-6 py-12">
-                <h2 class="text-4xl font-bold mb-4 text-gradient">RDAP Lookup</h2>
-                <p class="text-slate-400 mb-8">Perform an RDAP search (the modern successor to WHOIS)</p>
+                <h2 class="text-4xl font-bold mb-4" style="background: linear-gradient(135deg, #ff6b35 0%, #d73502 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">RDAP Lookup</h2>
+                <p class="text-slate-400 mb-8">Search RDAP database (modern successor to WHOIS)</p>
 
                 <div class="card mb-8">
                     <input type="text" 
                         id="whois-input" 
-                        placeholder="Enter an IP address or domain..." 
+                        placeholder="Enter IP address or domain..." 
                         class="w-full bg-slate-900/50 border border-orange-500/20 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20"
                         onkeypress="if(event.key==='Enter') app.lookupWhois()">
                     <button class="btn btn-primary mt-4 w-full" onclick="app.lookupWhois()">
@@ -138,8 +124,8 @@ const app = {
 
                 <div id="whois-result" class="hidden">
                     <div class="card">
-                        <h3 class="card-title">Search Result</h3>
-                        <pre id="whois-content" class="text-xs text-slate-300 bg-slate-900/50 p-4 rounded-lg overflow-auto max-h-96"></pre>
+                        <h3>Search Result</h3>
+                        <pre id="whois-content" class="text-xs text-slate-300 bg-slate-900/50 p-4 rounded-lg overflow-auto max-h-96 mt-4"></pre>
                     </div>
                 </div>
             </section>
@@ -149,74 +135,65 @@ const app = {
     renderAbout() {
         return `
             <section class="max-w-4xl mx-auto px-6 py-12">
-                <h2 class="text-4xl font-bold mb-8 text-gradient">About PROBE</h2>
+                <h2 class="text-4xl font-bold mb-8" style="background: linear-gradient(135deg, #ff6b35 0%, #d73502 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">About PROBE</h2>
 
                 <div class="space-y-6">
                     <div class="card">
-                        <h3 class="card-title">✨ What is PROBE?</h3>
-                        <p class="text-slate-300">
-                            PROBE is a modern and fast network diagnostics tool that helps you 
-                            discover how you appear on the internet. It works completely in your browser, 
-                            without a private server and without tracking.
+                        <h3>✨ What is PROBE?</h3>
+                        <p class="text-slate-300 mt-2">
+                            PROBE is a modern network diagnostics tool that shows how you appear on the internet.
+                            Works entirely in your browser - no private servers, no tracking, completely free.
                         </p>
                     </div>
 
                     <div class="card">
-                        <h3 class="card-title">🔒 Why is it secure?</h3>
-                        <ul class="text-slate-300 space-y-2">
-                            <li>✓ Static pages, hostable on GitHub Pages</li>
+                        <h3>🔒 Why is it secure?</h3>
+                        <ul class="text-slate-300 space-y-2 mt-2">
+                            <li>✓ Static pages on GitHub Pages</li>
                             <li>✓ No private backend</li>
-                            <li>✓ No data is saved by this site</li>
-                            <li>✓ Source code is available and transparent</li>
-                            <li>✓ Only public and reliable APIs</li>
+                            <li>✓ No data stored</li>
+                            <li>✓ Open source, transparent</li>
+                            <li>✓ Only public, reliable APIs</li>
                         </ul>
                     </div>
 
                     <div class="card">
-                        <h3 class="card-title">🌐 Services Used</h3>
-                        <ul class="text-slate-300 space-y-2">
-                            <li><a href="https://www.ipify.org/" target="_blank" class="text-orange-400 hover:text-orange-300">ipify.org</a> - Public IP detection</li>
-                            <li><a href="https://ipwho.is/" target="_blank" class="text-orange-400 hover:text-orange-300">ipwho.is</a> - Geolocation and network info</li>
-                            <li><a href="https://rdap.org/" target="_blank" class="text-orange-400 hover:text-orange-300">rdap.org</a> - RDAP/WHOIS lookup</li>
+                        <h3>🌐 Services Used</h3>
+                        <ul class="text-slate-300 space-y-2 mt-2">
+                            <li><a href="https://www.ipify.org/" target="_blank">ipify</a> - Public IP detection</li>
+                            <li><a href="https://ipwho.is/" target="_blank">ipwho.is</a> - Geolocation &amp; network data</li>
+                            <li><a href="https://rdap.org/" target="_blank">RDAP</a> - Domain/IP lookup</li>
                         </ul>
                     </div>
 
                     <div class="card">
-                        <h3 class="card-title">📚 Glossary</h3>
-                        <dl class="space-y-3 text-slate-300 text-sm">
+                        <h3>📚 Glossary</h3>
+                        <dl class="space-y-3 text-slate-300 text-sm mt-2">
                             <dt class="font-semibold text-orange-400">IPv4 / IPv6</dt>
-                            <dd class="ml-4 text-slate-400">The two versions of the Internet protocol. IPv6 is the future.</dd>
+                            <dd class="ml-4 text-slate-400">Internet protocol versions. IPv6 is the future.</dd>
                             
                             <dt class="font-semibold text-orange-400 mt-3">ASN</dt>
-                            <dd class="ml-4 text-slate-400">Autonomous System Number - identifies the network provider.</dd>
+                            <dd class="ml-4 text-slate-400">Autonomous System Number - identifies ISP.</dd>
                             
                             <dt class="font-semibold text-orange-400 mt-3">Hostname</dt>
-                            <dd class="ml-4 text-slate-400">The domain name associated with your IP (reverse DNS).</dd>
+                            <dd class="ml-4 text-slate-400">Domain name for your IP (reverse DNS).</dd>
                             
                             <dt class="font-semibold text-orange-400 mt-3">RDAP</dt>
-                            <dd class="ml-4 text-slate-400">Registration Data Access Protocol - the modern successor to WHOIS.</dd>
+                            <dd class="ml-4 text-slate-400">Modern replacement for WHOIS protocol.</dd>
                         </dl>
-                    </div>
-
-                    <div class="card bg-gradient-to-r from-orange-600/10 to-red-600/10 border-orange-500/30">
-                        <p class="text-sm text-slate-300">
-                            <strong>⚠️ Limitations:</strong> This tool provides public information. 
-                            Geolocation accuracy varies from country to city level. 
-                            Some indicators (proxy, VPN) are heuristic and not guaranteed.
-                        </p>
                     </div>
                 </div>
             </section>
         `;
     },
 
-    createGeoCard(icon, label, value) {
-        const isLoading = value === 'detecting…';
+    createCard(icon, label, value) {
+        const isLoading = value === 'Detecting...';
         return `
             <div class="card">
                 <div class="flex items-start gap-3">
                     <span class="text-2xl flex-shrink-0">${icon}</span>
-                    <div class="flex-1 w-full min-w-0">
+                    <div class="flex-1 min-w-0">
                         <p class="text-slate-400 text-sm">${label}</p>
                         <p class="text-lg font-semibold ${isLoading ? 'text-slate-500 italic shimmer' : 'text-orange-300'} break-words">${value}</p>
                     </div>
@@ -225,24 +202,9 @@ const app = {
         `;
     },
 
-    createNetCard(icon, label, value) {
-        const isLoading = value === 'detecting…';
-        return `
-            <div class="card">
-                <div class="flex items-start gap-3">
-                    <span class="text-2xl flex-shrink-0">${icon}</span>
-                    <div class="flex-1 w-full min-w-0">
-                        <p class="text-slate-400 text-sm">${label}</p>
-                        <p class="text-sm font-mono ${isLoading ? 'text-slate-500 italic shimmer' : 'text-orange-300'} break-words">${value}</p>
-                    </div>
-                </div>
-            </div>
-        `;
-    },
-
     createSecurityCard(icon, label, value) {
         let statusClass = 'unknown';
-        let statusText = 'detecting…';
+        let statusText = 'Detecting...';
         
         if (value !== undefined && value !== null) {
             statusClass = value ? 'true' : 'false';
@@ -268,17 +230,17 @@ const app = {
     async fetchAllData() {
         this.showLoading(true);
         try {
-            // Fetch IPv4
+            // Get IPv4
             const ipv4Response = await fetch('https://api.ipify.org?format=json').then(r => r.json());
             this.data.ipv4 = ipv4Response.ip;
 
-            // Fetch IPv6 (non-blocking)
+            // Get IPv6 (non-blocking)
             fetch('https://api6.ipify.org?format=json')
                 .then(r => r.json())
                 .then(data => { this.data.ipv6 = data.ip; this.render(); })
                 .catch(() => { this.data.ipv6 = null; });
 
-            // Fetch detailed geo data
+            // Get geolocation data
             const geoResponse = await fetch(`https://ipwho.is/${this.data.ipv4}`).then(r => r.json());
             
             this.data.geo = {
@@ -293,7 +255,7 @@ const app = {
                 connection_type: geoResponse.connection?.connection_type || 'N/A',
             };
 
-            // Fetch security info
+            // Get security indicators
             this.data.security = {
                 proxy: geoResponse.is_proxy || false,
                 vpn: geoResponse.is_vpn || false,
@@ -303,8 +265,8 @@ const app = {
 
             this.render();
         } catch (error) {
-            console.error('Error fetching data:', error);
-            alert('Error detecting data. Please check your connection.');
+            console.error('Error:', error);
+            alert('Error detecting data. Check your connection.');
         } finally {
             this.showLoading(false);
         }
@@ -313,7 +275,7 @@ const app = {
     async lookupWhois() {
         const input = document.getElementById('whois-input')?.value?.trim();
         if (!input) {
-            alert('Please enter an IP address or domain');
+            alert('Please enter an IP or domain');
             return;
         }
 
@@ -325,7 +287,7 @@ const app = {
             document.getElementById('whois-result').classList.remove('hidden');
             document.getElementById('whois-content').textContent = JSON.stringify(data, null, 2);
         } catch (error) {
-            alert('Error in RDAP search. Please verify the IP or domain.');
+            alert('RDAP search error. Check the IP/domain.');
         } finally {
             this.showLoading(false);
         }
@@ -333,25 +295,14 @@ const app = {
 
     copyToClipboard() {
         navigator.clipboard.writeText(this.data.ipv4 || '').then(() => {
-            alert('IP copied to clipboard: ' + this.data.ipv4);
+            alert('IP copied: ' + this.data.ipv4);
         });
     },
 
     showLoading(show) {
-        const overlay = document.getElementById('loading-overlay');
-        if (show) {
-            overlay.classList.remove('hidden');
-        } else {
-            overlay.classList.add('hidden');
-        }
-    },
-
-    attachEventListeners() {
-        // Attach any dynamic event listeners if needed
+        document.getElementById('loading-overlay').classList[show ? 'remove' : 'add']('hidden');
     }
 };
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', () => {
-    app.init();
-});
+// Initialize
+document.addEventListener('DOMContentLoaded', () => app.init());
