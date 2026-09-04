@@ -5,13 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>sonda — cosa vede la rete di te</title>
 <meta name="description" content="Scopri il tuo indirizzo IPv4 e IPv6, la geolocalizzazione stimata, l'hostname risolto e se stai navigando tramite proxy o VPN. Tutto nel browser, nessun dato salvato.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><circle cx=%2216%22 cy=%2216%22 r=%226%22 fill=%22%23eaa93f%22/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><circle cx=%2216%22 cy=%2216%22 r=%226%22 fill=%22%2335e4d0%22/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+
+<div class="aurora" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
 
 <div class="topbar">
   <a class="brand" href="index.html">
@@ -20,42 +23,66 @@
     <span class="brand-tag">/ diagnostica di rete</span>
   </a>
   <nav class="pages" aria-label="Sezioni">
-    <a href="index.html">connessione</a>
+    <a href="index.html" aria-current="page">connessione</a>
     <a href="whois.html">whois</a>
   </nav>
 </div>
 
 <main class="shell">
 
-  <section class="hero">
-    <p class="hero-label">Il tuo indirizzo IPv4</p>
-    <p class="hero-ip" id="ipv4-hero">in rilevamento<span class="cursor" aria-hidden="true"></span></p>
+  <section class="hero-panel">
+    <span class="live-tag"><span class="led" aria-hidden="true"></span>lettura in tempo reale dal tuo browser</span>
+    <p class="hero-ip" id="ipv4-hero">rilevamento in corso<span class="cursor" aria-hidden="true"></span></p>
     <p class="hero-sub" id="ipv6-line">IPv6: verifica in corso…</p>
   </section>
 
   <h2 class="section-title">Geolocalizzazione stimata</h2>
   <p class="section-desc">Dati derivati dal blocco di rete a cui appartiene il tuo IP, non dal GPS del dispositivo: la precisione varia da paese a città, raramente oltre.</p>
-  <dl class="manifest" id="geo-manifest">
-    <div class="row"><dt>Paese</dt><dd class="pending" data-field="country">in attesa…</dd></div>
-    <div class="row"><dt>Regione / città</dt><dd class="pending" data-field="city">in attesa…</dd></div>
-    <div class="row"><dt>Fuso orario</dt><dd class="pending" data-field="tz">in attesa…</dd></div>
-  </dl>
+  <div class="bento">
+    <div class="tile tile--span-4" data-cat="place" data-tile="country">
+      <p class="tile-label">Paese</p>
+      <p class="tile-value skeleton"></p>
+    </div>
+    <div class="tile tile--span-4" data-cat="place" data-tile="city">
+      <p class="tile-label">Regione / città</p>
+      <p class="tile-value skeleton"></p>
+    </div>
+    <div class="tile tile--span-4" data-cat="place" data-tile="tz">
+      <p class="tile-label">Fuso orario</p>
+      <p class="tile-value skeleton"></p>
+    </div>
+  </div>
 
   <h2 class="section-title">Rete e provider</h2>
   <p class="section-desc">A chi appartiene il blocco IP da cui ti stai collegando, e il nome host associato al tuo indirizzo, se pubblicato.</p>
-  <dl class="manifest" id="net-manifest">
-    <div class="row"><dt>Provider / organizzazione</dt><dd class="pending" data-field="isp">in attesa…</dd></div>
-    <div class="row"><dt>ASN</dt><dd class="pending" data-field="asn">in attesa…</dd></div>
-    <div class="row"><dt>Hostname risolto (rDNS)</dt><dd class="pending" data-field="hostname">in attesa…</dd></div>
-  </dl>
+  <div class="bento">
+    <div class="tile tile--span-6" data-cat="network" data-tile="isp">
+      <p class="tile-label">Provider / organizzazione</p>
+      <p class="tile-value skeleton"></p>
+      <p class="tile-sub" data-role="sub"></p>
+    </div>
+    <div class="tile tile--span-6" data-cat="network" data-tile="hostname">
+      <p class="tile-label">Hostname risolto (rDNS)</p>
+      <p class="tile-value mono skeleton"></p>
+    </div>
+  </div>
 
   <h2 class="section-title">Anonimizzazione rilevata</h2>
   <p class="section-desc">Indicatori euristici, non una prova: alcune reti aziendali o mobili possono comparire come proxy per come instradano il traffico.</p>
-  <div class="badge-row" id="security-badges">
-    <span class="badge unknown" data-badge="proxy"><span class="led"></span>proxy: in attesa…</span>
-    <span class="badge unknown" data-badge="vpn"><span class="led"></span>vpn: in attesa…</span>
-    <span class="badge unknown" data-badge="tor"><span class="led"></span>tor: in attesa…</span>
-    <span class="badge unknown" data-badge="hosting"><span class="led"></span>hosting/datacenter: in attesa…</span>
+  <div class="bento">
+    <div class="tile tile--span-8" data-cat="security" data-tile="security">
+      <p class="tile-label">Indicatori</p>
+      <div class="badge-row" id="security-badges">
+        <span class="badge unknown" data-badge="proxy"><span class="led"></span>proxy: in attesa…</span>
+        <span class="badge unknown" data-badge="vpn"><span class="led"></span>vpn: in attesa…</span>
+        <span class="badge unknown" data-badge="tor"><span class="led"></span>tor: in attesa…</span>
+        <span class="badge unknown" data-badge="hosting"><span class="led"></span>hosting/datacenter: in attesa…</span>
+      </div>
+    </div>
+    <div class="tile tile--span-4" data-cat="identity" data-tile="asn">
+      <p class="tile-label">ASN</p>
+      <p class="tile-value mono skeleton"></p>
+    </div>
   </div>
 
   <p class="note">
