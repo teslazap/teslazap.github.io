@@ -18,8 +18,15 @@ const app = {
 
     navigate(page) {
         this.currentPage = page;
-        document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-        event?.target?.classList.add('active');
+        
+        // Update active button
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.getAttribute('onclick').includes(`'${page}'`)) {
+                btn.classList.add('active');
+            }
+        });
+        
         this.render();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     },
