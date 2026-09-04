@@ -1,448 +1,317 @@
-/* PROBE - Network Diagnostics Application */
-
-const app = {
-    data: {
-        ipv4: null,
-        ipv6: null,
-        geo: {},
-        security: {},
-    },
-    currentPage: 'scanner',
-
-    async init() {
-        console.log('PROBE initialized');
-        this.navigate('scanner');
-        this.render(); // Render UI immediately with "Detecting..." placeholders
-        this.fetchAllData(); // Then fetch data
-    },
-
-    navigate(page) {
-        this.currentPage = page;
-        
-        // Update active button
-        document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.classList.remove('active');
-            if (btn.getAttribute('onclick').includes(`'${page}'`)) {
-                btn.classList.add('active');
-            }
-        });
-        
-        this.render();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-    },
-
-    render() {
-        const content = document.getElementById('app-content');
-        
-        switch (this.currentPage) {
-            case 'scanner':
-                content.innerHTML = this.renderScanner();
-                break;
-            case 'whois':
-                content.innerHTML = this.renderWhois();
-                break;
-            case 'about':
-                content.innerHTML = this.renderAbout();
-                break;
-        }
-    },
-
-    renderScanner() {
-        const ipv6Status = this.data.ipv6 ? `IPv6: ${this.data.ipv6}` : 'IPv6: Not available';
-        
-        return `
-            <section class="hero-section">
-                <p class="hero-label">Your IP Address</p>
-                <p class="hero-ip">${this.data.ipv4 || 'Detecting...'}</p>
-                <p class="hero-sub">${ipv6Status}</p>
-                <div class="hero-action">
-                    <button class="btn btn-primary" onclick="app.fetchAllData()">
-                        <span>🔄</span> Scan Again
-                    </button>
-                    <button class="btn btn-secondary" onclick="app.copyToClipboard()">
-                        <span>📋</span> Copy IP
-                    </button>
-                </div>
-            </section>
-
-            <section class="max-w-7xl mx-auto px-6 py-12">
-                <h2 class="text-3xl font-bold mb-2">Geolocation</h2>
-                <p class="text-slate-400 mb-8">Estimated location based on your IP network block.</p>
-                <div class="grid-responsive">
-                    ${this.createCard('🌍', 'Country', this.data.geo.country || 'Detecting...')}
-                    ${this.createCard('🏙️', 'City', this.data.geo.city || 'Detecting...')}
-                    ${this.createCard('⏰', 'Timezone', this.data.geo.timezone || 'Detecting...')}
-                    ${this.createCard('📍', 'Coordinates', (this.data.geo.latitude && this.data.geo.longitude) ? `${this.data.geo.latitude.toFixed(4)}, ${this.data.geo.longitude.toFixed(4)}` : 'Detecting...')}
-                </div>
-            </section>
-
-            <section class="max-w-7xl mx-auto px-6 py-12">
-                <h2 class="text-3xl font-bold mb-2">Network & Provider</h2>
-                <p class="text-slate-400 mb-8">Information about your ISP and network.</p>
-                <div class="grid-responsive">
-                    ${this.createCard('🏢', 'Provider/ISP', this.data.geo.isp || 'Detecting...')}
-                    ${this.createCard('🔢', 'ASN', this.data.geo.asn || 'Detecting...')}
-                    ${this.createCard('🌐', 'Hostname', this.data.geo.hostname || 'Detecting...')}
-                    ${this.createCard('📊', 'Connection Type', this.data.geo.connection_type || 'Detecting...')}
-                </div>
-            </section>
-
-            <section class="max-w-7xl mx-auto px-6 py-12">
-                <h2 class="text-3xl font-bold mb-2">Security Indicators</h2>
-                <p class="text-slate-400 mb-8">Heuristic detection - not a guarantee of security.</p>
-                <div class="grid-responsive">
-                    ${this.createSecurityCard('🔐', 'Proxy', this.data.security.proxy)}
-                    ${this.createSecurityCard('🛡️', 'VPN', this.data.security.vpn)}
-                    ${this.createSecurityCard('🧅', 'Tor', this.data.security.tor)}
-                    ${this.createSecurityCard('☁️', 'Datacenter', this.data.security.hosting)}
-                </div>
-            </section>
-
-            <section class="max-w-7xl mx-auto px-6 py-12 pb-12">
-                <div class="card bg-gradient-to-r from-orange-600/10 to-red-600/10 border-orange-500/30">
-                    <p class="text-sm text-slate-300">
-                        <strong>🔒 Privacy:</strong> No data sent to private servers. 
-                        This page queries public services: 
-                        <a href="https://www.ipify.org/" target="_blank">ipify</a>,
-                        <a href="https://ipwho.is/" target="_blank">ipwho.is</a>, and
-                        <a href="https://rdap.org/" target="_blank">RDAP</a>.
-                        Nothing is saved - static pages, no backend.
-                    </p>
-                </div>
-            </section>
-        `;
-    },
-
-    renderWhois() {
-        return `
-            <section class="max-w-7xl mx-auto px-6 py-12">
-                <h2 class="text-4xl font-bold mb-4" style="background: linear-gradient(135deg, #ff6b35 0%, #d73502 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">RDAP Lookup</h2>
-                <p class="text-slate-400 mb-8">Search RDAP database (modern successor to WHOIS)</p>
-
-                <div class="card mb-8">
-                    <input type="text" 
-                        id="whois-input" 
-                        placeholder="Enter IP address or domain..." 
-                        class="w-full bg-slate-900/50 border border-orange-500/20 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:border-orange-500/50 focus:ring-2 focus:ring-orange-500/20"
-                        onkeypress="if(event.key==='Enter') app.lookupWhois()">
-                    <button class="btn btn-primary mt-4 w-full" onclick="app.lookupWhois()">
-                        <span>🔍</span> Search RDAP
-                    </button>
-                </div>
-
-                <div id="whois-result" class="hidden">
-                    <div class="card">
-                        <h3>Search Result</h3>
-                        <pre id="whois-content" class="text-xs text-slate-300 bg-slate-900/50 p-4 rounded-lg overflow-auto max-h-96 mt-4"></pre>
-                    </div>
-                </div>
-            </section>
-        `;
-    },
-
-    renderAbout() {
-        return `
-            <section class="max-w-4xl mx-auto px-6 py-12">
-                <h2 class="text-4xl font-bold mb-8" style="background: linear-gradient(135deg, #ff6b35 0%, #d73502 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">About PROBE</h2>
-
-                <div class="space-y-6">
-                    <div class="card">
-                        <h3>✨ What is PROBE?</h3>
-                        <p class="text-slate-300 mt-2">
-                            PROBE is a modern network diagnostics tool that shows how you appear on the internet.
-                            Works entirely in your browser - no private servers, no tracking, completely free.
-                        </p>
-                    </div>
-
-                    <div class="card">
-                        <h3>🔒 Why is it secure?</h3>
-                        <ul class="text-slate-300 space-y-2 mt-2">
-                            <li>✓ Static pages on GitHub Pages</li>
-                            <li>✓ No private backend</li>
-                            <li>✓ No data stored</li>
-                            <li>✓ Open source, transparent</li>
-                            <li>✓ Only public, reliable APIs</li>
-                        </ul>
-                    </div>
-
-                    <div class="card">
-                        <h3>🌐 Services Used</h3>
-                        <ul class="text-slate-300 space-y-2 mt-2">
-                            <li><a href="https://www.ipify.org/" target="_blank">ipify</a> - Public IP detection</li>
-                            <li><a href="https://ipwho.is/" target="_blank">ipwho.is</a> - Geolocation &amp; network data</li>
-                            <li><a href="https://rdap.org/" target="_blank">RDAP</a> - Domain/IP lookup</li>
-                        </ul>
-                    </div>
-
-                    <div class="card">
-                        <h3>📚 Glossary</h3>
-                        <dl class="space-y-3 text-slate-300 text-sm mt-2">
-                            <dt class="font-semibold text-orange-400">IPv4 / IPv6</dt>
-                            <dd class="ml-4 text-slate-400">Internet protocol versions. IPv6 is the future.</dd>
-                            
-                            <dt class="font-semibold text-orange-400 mt-3">ASN</dt>
-                            <dd class="ml-4 text-slate-400">Autonomous System Number - identifies ISP.</dd>
-                            
-                            <dt class="font-semibold text-orange-400 mt-3">Hostname</dt>
-                            <dd class="ml-4 text-slate-400">Domain name for your IP (reverse DNS).</dd>
-                            
-                            <dt class="font-semibold text-orange-400 mt-3">RDAP</dt>
-                            <dd class="ml-4 text-slate-400">Modern replacement for WHOIS protocol.</dd>
-                        </dl>
-                    </div>
-                </div>
-            </section>
-        `;
-    },
-
-    createCard(icon, label, value) {
-        const isLoading = value === 'Detecting...';
-        return `
-            <div class="card">
-                <div class="flex items-start gap-3">
-                    <span class="text-2xl flex-shrink-0">${icon}</span>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-slate-400 text-sm">${label}</p>
-                        <p class="text-lg font-semibold ${isLoading ? 'text-slate-500 italic shimmer' : 'text-orange-300'} break-words">${value}</p>
-                    </div>
-                </div>
-            </div>
-        `;
-    },
-
-    createSecurityCard(icon, label, value) {
-        let statusClass = 'unknown';
-        let statusText = 'Detecting...';
-        
-        if (value !== undefined && value !== null) {
-            statusClass = value ? 'true' : 'false';
-            statusText = value ? 'DETECTED ⚠️' : 'NOT DETECTED ✓';
-        }
-
-        return `
-            <div class="card">
-                <div class="flex items-start gap-3">
-                    <span class="text-2xl flex-shrink-0">${icon}</span>
-                    <div class="flex-1">
-                        <p class="text-slate-400 text-sm">${label}</p>
-                        <div class="badge ${statusClass} mt-2">
-                            <span class="led"></span>
-                            <span class="text-xs">${statusText}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    },
-
-    async fetchAllData() {
-        this.showLoading(true);
+// Scanner - Auto-detect IP on page load
+const scanner = {
+    async refresh() {
         try {
             // Get IPv4
-            const ipv4Response = await fetch('https://api.ipify.org?format=json');
-            if (!ipv4Response.ok) throw new Error('Failed to fetch IPv4');
-            this.data.ipv4 = (await ipv4Response.json()).ip;
-            console.log('IPv4:', this.data.ipv4);
+            const ipv4Res = await fetch('https://api.ipify.org?format=json');
+            const { ip: ipv4 } = await ipv4Res.json();
+            document.getElementById('ipv4').textContent = ipv4;
 
             // Get IPv6 (non-blocking)
             fetch('https://api6.ipify.org?format=json')
                 .then(r => r.json())
-                .then(data => { 
-                    this.data.ipv6 = data.ip;
-                    console.log('IPv6:', data.ip);
-                    this.render();
+                .then(data => {
+                    document.getElementById('ipv6').textContent = `IPv6: ${data.ip}`;
                 })
-                .catch(e => { 
-                    console.log('IPv6 unavailable:', e);
-                    this.data.ipv6 = null;
+                .catch(() => {
+                    document.getElementById('ipv6').textContent = 'IPv6: Not available';
                 });
 
-            // Get geolocation data
-            const geoResponse = await fetch(`https://ipwho.is/${this.data.ipv4}`);
-            if (!geoResponse.ok) throw new Error('Failed to fetch geo data');
-            const geoData = await geoResponse.json();
-            console.log('Geo response:', geoData);
+            // Get geo data
+            const geoRes = await fetch(`https://ipwho.is/${ipv4}`);
+            const geo = await geoRes.json();
+
+            console.log('Full geo data:', geo); // DEBUG
+
+            document.getElementById('country').textContent = geo.country || 'N/A';
+            document.getElementById('city').textContent = geo.city || 'N/A';
             
-            this.data.geo = {
-                country: geoData.country || 'N/A',
-                city: geoData.city || 'N/A',
-                timezone: geoData.timezone_name || geoData.timezone || 'N/A',
-                latitude: geoData.latitude,
-                longitude: geoData.longitude,
-                isp: geoData.connection?.isp || 'N/A',
-                asn: geoData.connection?.asn || 'N/A',
-                hostname: geoData.connection?.hostname || 'N/A',
-                connection_type: geoData.connection?.connection_type || 'N/A',
-            };
+            // Timezone - extract just the ID
+            let tz = 'N/A';
+            if (geo.timezone?.id) {
+                tz = geo.timezone.id;
+            } else if (typeof geo.timezone === 'string') {
+                tz = geo.timezone;
+            }
+            document.getElementById('timezone').textContent = tz;
+            
+            document.getElementById('coords').textContent = geo.latitude && geo.longitude 
+                ? `${geo.latitude.toFixed(4)}, ${geo.longitude.toFixed(4)}`
+                : 'N/A';
+            document.getElementById('isp').textContent = geo.connection?.isp || 'N/A';
+            document.getElementById('asn').textContent = geo.connection?.asn || 'N/A';
+            
+            // Hostname - try reverse DNS lookup
+            this.getHostname(ipv4);
 
-            // Get security indicators
-            this.data.security = {
-                proxy: geoData.is_proxy || false,
-                vpn: geoData.is_vpn || false,
-                tor: geoData.is_tor || false,
-                hosting: geoData.is_datacenter || false,
-            };
+            // Security badges
+            const badges = [
+                { label: 'Proxy', status: geo.is_proxy },
+                { label: 'VPN', status: geo.is_vpn },
+                { label: 'Tor', status: geo.is_tor },
+                { label: 'Datacenter', status: geo.is_datacenter }
+            ];
 
-            this.render();
+            const badgesHtml = badges.map(b => {
+                const text = b.status ? `⚠️ ${b.label} Detected` : `✓ ${b.label} Not Detected`;
+                const className = b.status ? 'warning' : 'safe';
+                return `<span class="badge ${className}">${text}</span>`;
+            }).join('');
+
+            document.getElementById('security-badges').innerHTML = badgesHtml;
+
         } catch (error) {
-            console.error('Fetch error:', error);
-            alert('Error: ' + error.message);
-        } finally {
-            this.showLoading(false);
+            console.error('Error:', error);
+            alert('Error detecting network info: ' + error.message);
         }
     },
 
-    async lookupWhois() {
-        const input = document.getElementById('whois-input')?.value?.trim();
+    async getHostname(ip) {
+        try {
+            // Try reverse DNS lookup via dns.google (public API)
+            const response = await fetch(`https://dns.google/resolve?name=${ip}&type=PTR`);
+            const data = await response.json();
+            
+            if (data.Answer && data.Answer.length > 0) {
+                const hostname = data.Answer[0].data.replace(/\.$/, '');
+                document.getElementById('hostname').textContent = hostname;
+            } else {
+                document.getElementById('hostname').textContent = 'Not available';
+            }
+        } catch (error) {
+            console.log('Hostname lookup failed:', error);
+            document.getElementById('hostname').textContent = 'Not available';
+        }
+    }
+};
+
+// WHOIS - RDAP lookup with human-readable formatting
+const whois = {
+    async search() {
+        const input = document.getElementById('whois-input').value.trim();
         if (!input) {
             alert('Please enter an IP or domain');
             return;
         }
 
-        this.showLoading(true);
+        const resultDiv = document.getElementById('whois-result');
+        const errorDiv = document.getElementById('whois-error');
+        
+        resultDiv.classList.add('hidden');
+        errorDiv.classList.add('hidden');
+
+        // Show loading
+        resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Searching RDAP database...</p></div>';
+        resultDiv.classList.remove('hidden');
+
         try {
-            // Detect if it's a domain or IP
+            // Detect IP vs domain
             const isDomain = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(input);
             const endpoint = isDomain ? `domain/${input}` : `ip/${input}`;
-            
+
             const response = await fetch(`https://rdap.org/${endpoint}`);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: Invalid IP or domain`);
-            }
-            
-            // Check content type - RDAP sometimes returns XML
-            const contentType = response.headers.get('content-type');
-            let data;
-            
-            if (contentType?.includes('application/json')) {
-                data = await response.json();
-            } else if (contentType?.includes('application/xml') || contentType?.includes('text/plain')) {
-                // If XML, parse and format for readability
-                data = await response.text();
-                data = { raw: data };
-            } else {
-                data = await response.json();
-            }
-            
-            document.getElementById('whois-result').classList.remove('hidden');
-            document.getElementById('whois-content').innerHTML = this.formatRdapData(data);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+            const data = await response.json();
+            resultDiv.innerHTML = this.formatData(data);
+
         } catch (error) {
             console.error('RDAP error:', error);
-            alert('RDAP search error: ' + error.message);
-        } finally {
-            this.showLoading(false);
+            errorDiv.textContent = '❌ Error: ' + error.message + '. Check your input.';
+            errorDiv.classList.remove('hidden');
+            resultDiv.classList.add('hidden');
         }
     },
 
-    formatRdapData(data) {
-        if (data.raw) {
-            return `<div class="space-y-4">${this.escapeHtml(data.raw).split('\n').map(line => 
-                `<p class="text-sm text-slate-300 font-mono">${line}</p>`
-            ).join('')}</div>`;
+    formatData(data) {
+        let html = '';
+
+        // Domain/IP Handle
+        if (data.handle) {
+            html += `
+                <div class="rdap-section">
+                    <h3>Registry Handle</h3>
+                    <div class="rdap-field">
+                        <span class="rdap-field-value">${this.escape(data.handle)}</span>
+                    </div>
+                </div>
+            `;
         }
-        
-        // Format JSON data into human-readable cards
-        let html = '<div class="space-y-4">';
-        
-        // Handle domain data
-        if (data.handle || data.ldhName) {
-            html += `<div class="card"><h4 class="font-semibold text-orange-400 mb-2">📋 Domain/Registry Handle</h4>
-                <p class="text-slate-300"><strong>Handle:</strong> ${this.escapeHtml(data.handle || data.ldhName)}</p></div>`;
+
+        // Object Class
+        if (data.objectClassName) {
+            html += `
+                <div class="rdap-section">
+                    <h3>Type</h3>
+                    <div class="rdap-field">
+                        <span class="rdap-field-value">${this.escape(data.objectClassName)}</span>
+                    </div>
+                </div>
+            `;
         }
-        
-        // Handle IP network data
+
+        // Network info (for IPs)
         if (data.startAddress || data.endAddress) {
-            html += `<div class="card"><h4 class="font-semibold text-orange-400 mb-2">🌐 IP Network Range</h4>
-                <p class="text-slate-300"><strong>Start:</strong> ${this.escapeHtml(data.startAddress || 'N/A')}</p>
-                <p class="text-slate-300"><strong>End:</strong> ${this.escapeHtml(data.endAddress || 'N/A')}</p>
-                ${data.cidrPrefix ? `<p class="text-slate-300"><strong>CIDR:</strong> /${data.cidrPrefix}</p>` : ''}</div>`;
+            html += `
+                <div class="rdap-section">
+                    <h3>IP Network Range</h3>
+                    ${data.startAddress ? `<div class="rdap-field">
+                        <span class="rdap-field-label">Start Address</span>
+                        <span class="rdap-field-value">${this.escape(data.startAddress)}</span>
+                    </div>` : ''}
+                    ${data.endAddress ? `<div class="rdap-field">
+                        <span class="rdap-field-label">End Address</span>
+                        <span class="rdap-field-value">${this.escape(data.endAddress)}</span>
+                    </div>` : ''}
+                    ${data.cidrPrefix ? `<div class="rdap-field">
+                        <span class="rdap-field-label">CIDR</span>
+                        <span class="rdap-field-value">/${data.cidrPrefix}</span>
+                    </div>` : ''}
+                </div>
+            `;
         }
-        
-        // Entities (registrar, registrant, etc.)
-        if (data.entities && Array.isArray(data.entities)) {
+
+        // Name (domain name)
+        if (data.ldhName) {
+            html += `
+                <div class="rdap-section">
+                    <h3>Domain Name</h3>
+                    <div class="rdap-field">
+                        <span class="rdap-field-value">${this.escape(data.ldhName)}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Status
+        if (data.status && data.status.length > 0) {
+            html += `
+                <div class="rdap-section">
+                    <h3>Status</h3>
+                    <ul class="rdap-list">
+                        ${data.status.map(s => `<li>${this.escape(s)}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        // Events (creation date, update, expiration, etc)
+        if (data.events && data.events.length > 0) {
+            const eventMap = {};
+            data.events.forEach(e => {
+                if (e.eventDate) {
+                    const action = e.eventAction || 'Unknown';
+                    const date = new Date(e.eventDate).toLocaleDateString();
+                    eventMap[action] = date;
+                }
+            });
+
+            if (Object.keys(eventMap).length > 0) {
+                html += `
+                    <div class="rdap-section">
+                        <h3>Important Dates</h3>
+                        ${Object.entries(eventMap).map(([action, date]) => `
+                            <div class="rdap-field">
+                                <span class="rdap-field-label">${this.escape(action)}</span>
+                                <span class="rdap-field-value">${date}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+        }
+
+        // Contacts/Entities
+        if (data.entities && data.entities.length > 0) {
             data.entities.forEach((entity, idx) => {
-                if (entity.vcardArray && entity.vcardArray[1]) {
-                    const vcard = entity.vcardArray[1];
-                    let name = 'Unknown', org = '', email = '';
-                    
+                const role = entity.roles ? entity.roles.join(', ') : `Contact ${idx + 1}`;
+                const vcard = entity.vcardArray ? entity.vcardArray[1] : [];
+                
+                let name = '', org = '', email = '', phone = '';
+                
+                if (vcard) {
                     vcard.forEach(prop => {
                         if (prop[0] === 'fn') name = prop[3];
                         if (prop[0] === 'org') org = prop[3];
                         if (prop[0] === 'email') email = prop[3];
+                        if (prop[0] === 'tel') phone = prop[3];
                     });
-                    
-                    if (name && name !== 'Unknown') {
-                        html += `<div class="card"><h4 class="font-semibold text-orange-400 mb-2">👤 ${entity.roles?.join(', ') || 'Entity ' + (idx+1)}</h4>
-                            <p class="text-slate-300"><strong>Name:</strong> ${this.escapeHtml(name)}</p>
-                            ${org ? `<p class="text-slate-300"><strong>Organization:</strong> ${this.escapeHtml(org)}</p>` : ''}
-                            ${email ? `<p class="text-slate-300"><strong>Email:</strong> ${this.escapeHtml(email)}</p>` : ''}
-                        </div>`;
-                    }
+                }
+
+                if (name || email || org) {
+                    html += `
+                        <div class="rdap-section">
+                            <h3>${this.escape(role)}</h3>
+                            ${name ? `<div class="rdap-field">
+                                <span class="rdap-field-label">Name</span>
+                                <span class="rdap-field-value">${this.escape(name)}</span>
+                            </div>` : ''}
+                            ${org ? `<div class="rdap-field">
+                                <span class="rdap-field-label">Organization</span>
+                                <span class="rdap-field-value">${this.escape(org)}</span>
+                            </div>` : ''}
+                            ${email ? `<div class="rdap-field">
+                                <span class="rdap-field-label">Email</span>
+                                <span class="rdap-field-value">${this.escape(email)}</span>
+                            </div>` : ''}
+                            ${phone ? `<div class="rdap-field">
+                                <span class="rdap-field-label">Phone</span>
+                                <span class="rdap-field-value">${this.escape(phone)}</span>
+                            </div>` : ''}
+                        </div>
+                    `;
                 }
             });
         }
-        
-        // Registrar/Events
-        if (data.registrar) {
-            html += `<div class="card"><h4 class="font-semibold text-orange-400 mb-2">🏢 Registrar</h4>
-                <p class="text-slate-300">${this.escapeHtml(JSON.stringify(data.registrar, null, 2))}</p></div>`;
-        }
-        
-        // Events (creation, update, expiration)
-        if (data.events && Array.isArray(data.events)) {
-            html += `<div class="card"><h4 class="font-semibold text-orange-400 mb-2">📅 Important Dates</h4>`;
-            data.events.forEach(event => {
-                if (event.eventAction && event.eventDate) {
-                    const action = event.eventAction.toUpperCase();
-                    const date = new Date(event.eventDate).toLocaleDateString();
-                    html += `<p class="text-slate-300"><strong>${action}:</strong> ${date}</p>`;
-                }
-            });
-            html += `</div>`;
-        }
-        
-        // Status
-        if (data.status && Array.isArray(data.status)) {
-            html += `<div class="card"><h4 class="font-semibold text-orange-400 mb-2">⚙️ Status</h4>
-                <p class="text-slate-300">${this.escapeHtml(data.status.join(', '))}</p></div>`;
-        }
-        
+
         // Notices
-        if (data.notices && Array.isArray(data.notices)) {
-            html += `<div class="card"><h4 class="font-semibold text-orange-400 mb-2">ℹ️ Notices</h4>`;
-            data.notices.forEach(notice => {
-                if (notice.title) {
-                    html += `<p class="text-slate-300 text-sm"><strong>${this.escapeHtml(notice.title)}</strong></p>`;
-                }
-            });
-            html += `</div>`;
+        if (data.notices && data.notices.length > 0) {
+            const noticeTexts = data.notices
+                .filter(n => n.title || (n.description && n.description.length > 0))
+                .map(n => {
+                    const title = n.title || 'Notice';
+                    const desc = n.description ? n.description.join(' ') : '';
+                    return `${title}${desc ? ': ' + desc : ''}`;
+                });
+
+            if (noticeTexts.length > 0) {
+                html += `
+                    <div class="rdap-section">
+                        <h3>Legal Notices</h3>
+                        <ul class="rdap-list">
+                            ${noticeTexts.map(n => `<li>${this.escape(n)}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            }
         }
-        
-        // Raw JSON if nothing matched
-        if (!html.includes('card')) {
-            html += `<div class="card"><h4 class="font-semibold text-orange-400 mb-2">📊 Raw Data</h4>
-                <pre class="text-xs text-slate-300 bg-slate-900/50 p-4 rounded-lg overflow-auto max-h-96">${this.escapeHtml(JSON.stringify(data, null, 2))}</pre></div>`;
+
+        // If nothing was found, show raw data
+        if (!html) {
+            html = `
+                <div class="rdap-section">
+                    <h3>Raw Data</h3>
+                    <pre style="font-size: 0.85em; overflow-x: auto;">${this.escape(JSON.stringify(data, null, 2))}</pre>
+                </div>
+            `;
         }
-        
-        html += '</div>';
-        return html;
+
+        return `<div class="rdap-result">${html}</div>`;
     },
-    
-    escapeHtml(text) {
+
+    escape(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
-    },
-        navigator.clipboard.writeText(this.data.ipv4 || '').then(() => {
-            alert('IP copied: ' + this.data.ipv4);
-        });
-    },
-
-    showLoading(show) {
-        document.getElementById('loading-overlay').classList[show ? 'remove' : 'add']('hidden');
     }
 };
 
-// Initialize
-document.addEventListener('DOMContentLoaded', () => app.init());
+// Auto-scan on page load
+document.addEventListener('DOMContentLoaded', () => scanner.refresh());
+
+// Allow Enter key in search
+document.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && e.target.id === 'whois-input') {
+        whois.search();
+    }
+});
