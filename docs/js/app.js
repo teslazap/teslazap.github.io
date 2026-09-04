@@ -80,25 +80,28 @@ const scanner = {
 
     async getHostname(ip, elementId) {
         try {
-            // Try ipapi.co first - excellent for reverse DNS
-            const response = await fetch(`https://ipapi.co/${ip}/json/`);
-            const data = await response.json();
+            // Try api.hackertarget.com for reverse DNS
+            const response = await fetch(`https://api.hackertarget.com/reversedns/?q=${ip}`);
+            const data = await response.text();
             
-            if (data.hostname && data.hostname !== 'Not found') {
-                document.getElementById(elementId).textContent = data.hostname;
-                return;
+            if (data && !data.includes('error') && !data.includes('API LIMIT')) {
+                const hostname = data.trim().split('\n')[0];
+                if (hostname && hostname.length > 0) {
+                    document.getElementById(elementId).textContent = hostname;
+                    return;
+                }
             }
             
-            // Try ip-api.com as fallback
-            const response2 = await fetch(`https://ip-api.com/json/${ip}?fields=reverse`);
+            // Try ipapi.co
+            const response2 = await fetch(`https://ipapi.co/${ip}/json/`);
             const data2 = await response2.json();
             
-            if (data2.reverse && data2.reverse !== 'empty') {
-                document.getElementById(elementId).textContent = data2.reverse;
+            if (data2.hostname && data2.hostname !== 'Not found') {
+                document.getElementById(elementId).textContent = data2.hostname;
                 return;
             }
             
-            // If still nothing, try ipwho.is
+            // Try ipwho.is as last resort
             const response3 = await fetch(`https://ipwho.is/${ip}`);
             const data3 = await response3.json();
             
