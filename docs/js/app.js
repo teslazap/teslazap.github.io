@@ -1,15 +1,21 @@
 /* app.js — popola la pagina index.html con i dati della connessione corrente */
 
-function setField(name, value, isError = false) {
-  const el = document.querySelector(`[data-field="${name}"]`);
-  if (!el) return;
-  el.textContent = value;
-  el.classList.remove('pending');
-  if (isError) el.classList.add('err');
+function setTile(name, html, { sub = null, error = false } = {}) {
+  const tile = document.querySelector(`[data-tile="${name}"]`);
+  if (!tile) return;
+  const valueEl = tile.querySelector('.tile-value');
+  valueEl.classList.remove('skeleton');
+  valueEl.innerHTML = html;
+  tile.classList.remove('is-error');
+  tile.classList.add(error ? 'is-error' : 'is-ready');
+  if (error) tile.classList.remove('is-ready');
+  if (sub !== null) {
+    const subEl = tile.querySelector('[data-role="sub"]');
+    if (subEl) subEl.textContent = sub;
+  }
 }
 
 function setBadge(name, state, label) {
-  // state: 'ok' (assente/negativo, buono), 'bad' (rilevato), 'unknown'
   const el = document.querySelector(`[data-badge="${name}"]`);
   if (!el) return;
   el.classList.remove('ok', 'bad', 'unknown');
@@ -56,13 +62,13 @@ async function loadGeoAndSecurity() {
     if (data.success === false) throw new Error(data.message || 'lookup fallito');
 
     const flag = countryFlagEmoji(data.country_code);
-    setField('country', `${flag ? flag + ' ' : ''}${data.country || '—'} (${data.country_code || '—'})`);
-    setField('city', [data.region, data.city].filter(Boolean).join(', ') || '—');
-    setField('tz', data.timezone && data.timezone.id ? `${data.timezone.id} (UTC${data.timezone.utc || ''})` : '—');
+    setTile('country', `${flag ? `<span class="tile-flag">${flag}</span>` : ''}${escapeHtml(data.country || '—')}`, { sub: data.country_code || '' });
+    setTile('city', escapeHtml([data.region, data.city].filter(Boolean).join(', ') || '—'));
+    setTile('tz', escapeHtml(data.timezone?.id || '—'), { sub: data.timezone ? `UTC${data.timezone.utc || ''}` : '' });
 
     const conn = data.connection || {};
-    setField('isp', conn.isp || conn.org || '—');
-    setField('asn', conn.asn ? `AS${conn.asn}${conn.org ? ' — ' + conn.org : ''}` : '—');
+    setTile('isp', escapeHtml(conn.isp || conn.org || '—'), { sub: conn.org && conn.org !== conn.isp ? conn.org : '' });
+    setTile('asn', conn.asn ? `AS${conn.asn}` : '—', { sub: conn.org || '' });
 
     const sec = data.security || {};
     setBadge('proxy', sec.proxy ? 'bad' : 'ok', sec.proxy ? 'proxy: rilevato' : 'proxy: non rilevato');
@@ -71,12 +77,8 @@ async function loadGeoAndSecurity() {
     setBadge('hosting', sec.hosting ? 'bad' : 'ok', sec.hosting ? 'hosting/datacenter: sì' : 'hosting/datacenter: no');
 
     return data.ip || null;
-  } catch (e) {
-    setField('country', 'non disponibile', true);
-    setField('city', 'non disponibile', true);
-    setField('tz', 'non disponibile', true);
-    setField('isp', 'non disponibile', true);
-    setField('asn', 'non disponibile', true);
+  } catch {
+    ['country', 'city', 'tz', 'isp', 'asn'].forEach(n => setTile(n, 'non disponibile', { error: true }));
     setBadge('proxy', 'unknown', 'proxy: sconosciuto');
     setBadge('vpn', 'unknown', 'vpn: sconosciuto');
     setBadge('tor', 'unknown', 'tor: sconosciuto');
@@ -87,11 +89,11 @@ async function loadGeoAndSecurity() {
 
 async function loadHostname(ip) {
   if (!ip) {
-    setField('hostname', 'non disponibile (nessun IP da risolvere)', true);
+    setTile('hostname', 'non disponibile', { error: true });
     return;
   }
   const host = await reverseDns(ip);
-  setField('hostname', host || 'nessun record PTR pubblicato per questo indirizzo');
+  setTile('hostname', escapeHtml(host || 'nessun record PTR pubblicato'));
 }
 
 (async function init() {

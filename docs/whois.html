@@ -5,13 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>sonda — whois per IP e domini</title>
 <meta name="description" content="Interroga i registri RDAP per un indirizzo IP o un dominio: registrar, date di scadenza, name server, blocco di rete e organizzazione assegnataria.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><circle cx=%2216%22 cy=%2216%22 r=%226%22 fill=%22%23eaa93f%22/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><circle cx=%2216%22 cy=%2216%22 r=%226%22 fill=%22%2335e4d0%22/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+
+<div class="aurora" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
 
 <div class="topbar">
   <a class="brand" href="index.html">
@@ -21,25 +24,30 @@
   </a>
   <nav class="pages" aria-label="Sezioni">
     <a href="index.html">connessione</a>
-    <a href="whois.html">whois</a>
+    <a href="whois.html" aria-current="page">whois</a>
   </nav>
 </div>
 
 <main class="shell">
 
-  <section class="hero" style="padding-bottom:26px;">
-    <p class="hero-label">whois</p>
-    <p class="hero-sub" style="margin-bottom:0; font-size:0.95rem; color:var(--muted);">
-      Inserisci un indirizzo IP o un nome di dominio: la pagina interroga il registro RDAP competente e mostra chi lo gestisce.
+  <section class="hero-panel" style="padding-bottom:30px;">
+    <span class="live-tag"><span class="led" aria-hidden="true"></span>whois via RDAP</span>
+    <p class="hero-sub" style="font-size:0.98rem; color:var(--text);">
+      Inserisci un indirizzo IP o un nome di dominio: interrogo il registro competente e ti mostro chi lo gestisce.
     </p>
   </section>
 
-  <form id="whois-form" class="terminal-input" style="margin-top:22px;" autocomplete="off">
-    <span class="prompt" aria-hidden="true">&gt;</span>
-    <label for="query" class="sr-only" style="position:absolute; left:-9999px;">Indirizzo IP o dominio</label>
-    <input id="query" name="query" type="text" placeholder="es. wikipedia.org oppure 8.8.8.8" spellcheck="false">
-    <button type="submit" id="submit-btn">Interroga</button>
-  </form>
+  <div class="search-wrap">
+    <div class="search-glow" aria-hidden="true"></div>
+    <form id="whois-form" class="terminal-input" autocomplete="off">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>
+      </svg>
+      <label for="query" class="sr-only" style="position:absolute; left:-9999px;">Indirizzo IP o dominio</label>
+      <input id="query" name="query" type="text" placeholder="es. wikipedia.org oppure 8.8.8.8" spellcheck="false">
+      <button type="submit" id="submit-btn">Interroga</button>
+    </form>
+  </div>
   <p class="examples">
     prova:
     <button type="button" data-example="wikipedia.org">wikipedia.org</button>
@@ -53,7 +61,7 @@
       <span class="source-tag" id="result-source"></span>
     </div>
     <div id="status-line" class="status-line"></div>
-    <dl class="manifest" id="result-manifest"></dl>
+    <div class="bento" id="result-bento"></div>
     <details class="raw" id="raw-details" hidden>
       <summary>Risposta RDAP completa (JSON)</summary>
       <pre id="raw-json"></pre>
