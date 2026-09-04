@@ -68,15 +68,22 @@ const scanner = {
 
     async getHostname(ip) {
         try {
-            // Try reverse DNS lookup via dns.google (public API)
-            const response = await fetch(`https://dns.google/resolve?name=${ip}&type=PTR`);
+            // Try ip-api.com for reverse DNS (supports CORS)
+            const response = await fetch(`https://ip-api.com/json/${ip}?fields=reverse`);
             const data = await response.json();
             
-            if (data.Answer && data.Answer.length > 0) {
-                const hostname = data.Answer[0].data.replace(/\.$/, '');
-                document.getElementById('hostname').textContent = hostname;
+            if (data.reverse && data.reverse !== 'empty') {
+                document.getElementById('hostname').textContent = data.reverse;
             } else {
-                document.getElementById('hostname').textContent = 'Not available';
+                // Try alternative: ipwhois.io (another CORS-friendly service)
+                const response2 = await fetch(`https://ipwho.is/${ip}`);
+                const data2 = await response2.json();
+                
+                if (data2.connection?.hostname) {
+                    document.getElementById('hostname').textContent = data2.connection.hostname;
+                } else {
+                    document.getElementById('hostname').textContent = 'Not available';
+                }
             }
         } catch (error) {
             console.log('Hostname lookup failed:', error);
