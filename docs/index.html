@@ -1,26 +1,90 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SONDA - Scopri la Tua Connessione</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="style-new.css">
-    <meta name="description" content="Scopri il tuo indirizzo IPv4 e IPv6, la geolocalizzazione stimata, l'hostname risolto e se stai navigando tramite proxy o VPN. Tutto nel browser, nessun dato salvato.">
+    <title>PROBE - Network Diagnostics Tool</title>
+    <meta name="description" content="Discover your public IPv4 and IPv6 addresses, estimated geolocation, hostname, and check if you're behind a proxy or VPN. Everything in your browser, no data saved.">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><circle cx=%2216%22 cy=%2216%22 r=%226%22 fill=%22%23ff6b35%22/></svg>">
+    
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>sonda — cosa vede la rete di te</title>
-<meta name="description" content="Scopri il tuo indirizzo IPv4 e IPv6, la geolocalizzazione stimata, l'hostname risolto e se stai navigando tramite proxy o VPN. Tutto nel browser, nessun dato salvato.">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><circle cx=%2216%22 cy=%2216%22 r=%226%22 fill=%22%2335e4d0%22/></svg>">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="style.css">
 </head>
+<body class="bg-gradient-to-br from-slate-900 via-slate-950 to-black text-white" style="font-family: 'Space Grotesk', sans-serif;">
+    <!-- Animated background -->
+    <div class="fixed inset-0 bg-gradient-to-br from-orange-600/15 via-red-600/10 to-transparent pointer-events-none"></div>
+    <div class="fixed top-0 right-0 w-96 h-96 bg-orange-600/5 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="fixed bottom-0 left-0 w-96 h-96 bg-red-600/5 rounded-full blur-3xl pointer-events-none"></div>
+    
+    <!-- Navigation -->
+    <nav class="relative z-40 backdrop-blur-md bg-slate-950/40 border-b border-orange-500/20 sticky top-0">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-11 h-11 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center font-bold text-lg shadow-lg shadow-orange-600/50">◉</div>
+                <div>
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">PROBE</h1>
+                    <p class="text-xs text-orange-300/60">Network Diagnostics</p>
+                </div>
+            </div>
+            <div class="flex gap-1">
+                <button onclick="app.navigate('scanner')" class="nav-btn active">Scanner</button>
+                <button onclick="app.navigate('whois')" class="nav-btn">WHOIS</button>
+                <button onclick="app.navigate('about')" class="nav-btn">About</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="relative z-10 min-h-screen w-full">
+        <div id="app-content" class="w-full"></div>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center">
+        <div class="flex flex-col items-center gap-4">
+            <div class="spinner"></div>
+            <p class="text-orange-300 text-sm">Scanning...</p>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="relative z-10 border-t border-orange-500/10 bg-slate-950/30 backdrop-blur-sm">
+        <div class="max-w-7xl mx-auto px-6 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+                <div>
+                    <h3 class="text-orange-400 font-semibold mb-2">PROBE</h3>
+                    <p class="text-slate-400 text-sm">Modern and fast network diagnostics, all in your browser.</p>
+                </div>
+                <div>
+                    <h3 class="text-orange-400 font-semibold mb-2">Privacy</h3>
+                    <p class="text-slate-400 text-sm">No data is saved. No private servers. Everything static on GitHub Pages.</p>
+                </div>
+                <div>
+                    <h3 class="text-orange-400 font-semibold mb-2">External APIs</h3>
+                    <p class="text-slate-400 text-sm">
+                        <a href="https://www.ipify.org/" target="_blank" class="text-orange-300 hover:text-orange-200">ipify</a>,
+                        <a href="https://ipwho.is/" target="_blank" class="text-orange-300 hover:text-orange-200">ipwho.is</a>,
+                        <a href="https://rdap.org/" target="_blank" class="text-orange-300 hover:text-orange-200">RDAP</a>
+                    </p>
+                </div>
+            </div>
+            <div class="border-t border-orange-500/10 pt-6 text-center text-slate-500 text-sm">
+                <p>© 2026 PROBE — Static page, no tracking, hostable on GitHub Pages</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
 <body class="font-sans bg-gradient-to-br from-slate-900 via-slate-950 to-black text-white overflow-x-hidden" style="font-family: 'Space Grotesk', sans-serif;">
     <!-- Animated background -->
     <div class="fixed inset-0 bg-gradient-to-br from-orange-600/15 via-red-600/10 to-transparent pointer-events-none"></div>
