@@ -120,6 +120,10 @@
             transition: all 0.3s ease;
         }
 
+        .info-card.full-width {
+            grid-column: 1 / -1;
+        }
+
         .info-card:hover {
             background: rgba(30, 41, 59, 1);
             border-color: rgba(255, 107, 53, 0.3);
@@ -383,11 +387,11 @@
                     <div class="info-card-label">ASN</div>
                     <div class="info-card-value" id="asn">Detecting...</div>
                 </div>
-                <div class="info-card">
+                <div class="info-card full-width">
                     <div class="info-card-label">Hostname (IPv4)</div>
                     <div class="info-card-value" id="hostname">Detecting...</div>
                 </div>
-                <div class="info-card">
+                <div class="info-card full-width">
                     <div class="info-card-label">Hostname (IPv6)</div>
                     <div class="info-card-value" id="hostname-ipv6">-</div>
                 </div>
