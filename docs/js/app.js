@@ -231,42 +231,54 @@ const app = {
         this.showLoading(true);
         try {
             // Get IPv4
-            const ipv4Response = await fetch('https://api.ipify.org?format=json').then(r => r.json());
-            this.data.ipv4 = ipv4Response.ip;
+            const ipv4Response = await fetch('https://api.ipify.org?format=json');
+            if (!ipv4Response.ok) throw new Error('Failed to fetch IPv4');
+            this.data.ipv4 = (await ipv4Response.json()).ip;
+            console.log('IPv4:', this.data.ipv4);
 
             // Get IPv6 (non-blocking)
             fetch('https://api6.ipify.org?format=json')
                 .then(r => r.json())
-                .then(data => { this.data.ipv6 = data.ip; this.render(); })
-                .catch(() => { this.data.ipv6 = null; });
+                .then(data => { 
+                    this.data.ipv6 = data.ip;
+                    console.log('IPv6:', data.ip);
+                    this.render();
+                })
+                .catch(e => { 
+                    console.log('IPv6 unavailable:', e);
+                    this.data.ipv6 = null;
+                });
 
             // Get geolocation data
-            const geoResponse = await fetch(`https://ipwho.is/${this.data.ipv4}`).then(r => r.json());
+            const geoResponse = await fetch(`https://ipwho.is/${this.data.ipv4}`);
+            if (!geoResponse.ok) throw new Error('Failed to fetch geo data');
+            const geoData = await geoResponse.json();
+            console.log('Geo response:', geoData);
             
             this.data.geo = {
-                country: geoResponse.country || 'N/A',
-                city: geoResponse.city || 'N/A',
-                timezone: geoResponse.timezone || 'N/A',
-                latitude: geoResponse.latitude,
-                longitude: geoResponse.longitude,
-                isp: geoResponse.connection?.isp || 'N/A',
-                asn: geoResponse.connection?.asn || 'N/A',
-                hostname: geoResponse.connection?.hostname || 'N/A',
-                connection_type: geoResponse.connection?.connection_type || 'N/A',
+                country: geoData.country || 'N/A',
+                city: geoData.city || 'N/A',
+                timezone: geoData.timezone || 'N/A',
+                latitude: geoData.latitude,
+                longitude: geoData.longitude,
+                isp: geoData.connection?.isp || 'N/A',
+                asn: geoData.connection?.asn || 'N/A',
+                hostname: geoData.connection?.hostname || 'N/A',
+                connection_type: geoData.connection?.connection_type || 'N/A',
             };
 
             // Get security indicators
             this.data.security = {
-                proxy: geoResponse.is_proxy || false,
-                vpn: geoResponse.is_vpn || false,
-                tor: geoResponse.is_tor || false,
-                hosting: geoResponse.is_datacenter || false,
+                proxy: geoData.is_proxy || false,
+                vpn: geoData.is_vpn || false,
+                tor: geoData.is_tor || false,
+                hosting: geoData.is_datacenter || false,
             };
 
             this.render();
         } catch (error) {
-            console.error('Error:', error);
-            alert('Error detecting data. Check your connection.');
+            console.error('Fetch error:', error);
+            alert('Error: ' + error.message);
         } finally {
             this.showLoading(false);
         }
@@ -281,13 +293,42 @@ const app = {
 
         this.showLoading(true);
         try {
-            const response = await fetch(`https://rdap.org/ip/${input}`);
-            const data = await response.json();
+            // Detect if it's a domain or IP
+            const isDomain = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(input);
+            const endpoint = isDomain ? `domain/${input}` : `ip/${input}`;
+            
+            const response = await fetch(`https://rdap.org/${endpoint}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: Invalid IP or domain`);
+            }
+            
+            // Check content type - RDAP sometimes returns XML
+            const contentType = response.headers.get('content-type');
+            let data;
+            
+            if (contentType?.includes('application/json')) {
+                data = await response.json();
+            } else if (contentType?.includes('application/xml') || contentType?.includes('text/plain')) {
+                // If XML, parse and format for readability
+                data = await response.text();
+                data = { raw: data };
+            } else {
+                data = await response.json();
+            }
             
             document.getElementById('whois-result').classList.remove('hidden');
-            document.getElementById('whois-content').textContent = JSON.stringify(data, null, 2);
+            
+            if (data.raw) {
+                // For XML responses
+                document.getElementById('whois-content').textContent = data.raw.substring(0, 2000) + '\n... (truncated)';
+            } else {
+                // For JSON responses
+                document.getElementById('whois-content').textContent = JSON.stringify(data, null, 2);
+            }
         } catch (error) {
-            alert('RDAP search error. Check the IP/domain.');
+            console.error('RDAP error:', error);
+            alert('RDAP search error: ' + error.message);
         } finally {
             this.showLoading(false);
         }
