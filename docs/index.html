@@ -124,16 +124,12 @@
     const form = document.getElementById('inspectForm');
     const results = document.getElementById('results');
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const input = document.getElementById('repoInput').value.trim();
-      if(!input.includes('/')) return alert('Inserisci il formato username/repository (es. teslazap/teslazap.github.io)');
-
+    async function inspectRepo(repoPath) {
       results.classList.remove('hidden');
 
       // 1. Fetch GitHub API
       try {
-        const res = await fetch(`https://api.github.com/repos/${input}`);
+        const res = await fetch(`https://api.github.com/repos/${repoPath}`);
         if(res.ok) {
           const data = await res.json();
           document.getElementById('repoTitle').textContent = data.full_name;
@@ -145,7 +141,7 @@
           document.getElementById('repoTitle').textContent = 'Repository non trovato';
         }
       } catch(err) {
-        console.error(err);
+        console.error('Errore GitHub API:', err);
       }
 
       // 2. Fetch DNS via Google DNS over HTTPS API
@@ -160,12 +156,24 @@
         const aaaaCount = aaaaData.Answer ? aaaaData.Answer.length : 0;
         document.getElementById('dnsAAAA').textContent = `${aaaaCount} IP Risolti (OK)`;
       } catch(err) {
+        console.error('Errore DoH API:', err);
         document.getElementById('dnsA').textContent = 'Errore query';
       }
+    }
+
+    // Gestione Submit Form
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = document.getElementById('repoInput').value.trim();
+      if(!input.includes('/')) return alert('Inserisci il formato username/repository (es. teslazap/teslazap.github.io)');
+      
+      inspectRepo(input);
     });
 
-    // Auto trigger al caricamento
-    form.dispatchEvent(new Event('submit'));
+    // Esecuzione singola e sicura all'avvio della pagina
+    window.addEventListener('DOMContentLoaded', () => {
+      inspectRepo('teslazap/teslazap.github.io');
+    });
   </script>
 </body>
 </html>
