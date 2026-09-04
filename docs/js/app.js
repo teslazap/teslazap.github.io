@@ -211,7 +211,7 @@ const scanner = {
 
         try {
             const response = await fetch(
-                `https://myip.bartali.net/hostname-lookup.php?ip=${encodeURIComponent(query)}`
+                `https://www.ipng.za.net/api/hostname-lookup.php?ip=${encodeURIComponent(query)}`
             );
 
             if (!response.ok) {
