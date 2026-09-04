@@ -1,0 +1,378 @@
+/* ============================================
+   SONDA - Modern CSS Design System
+   Dark Mode with Orange/Red Warm Energy
+   ============================================ */
+
+:root {
+    --primary: #ff6b35;
+    --primary-dark: #e55100;
+    --accent: #d73502;
+    --accent-light: #ff8c5a;
+    --bg-dark: #0f172a;
+    --bg-darker: #0a0e27;
+    --surface: rgba(15, 23, 42, 0.7);
+    --border: rgba(255, 107, 53, 0.2);
+    --text-primary: #ffffff;
+    --text-secondary: #cbd5e1;
+    --text-muted: #94a3b8;
+}
+
+/* ============================================
+   Navigation
+   ============================================ */
+
+.nav-btn {
+    @apply px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 relative;
+    color: var(--text-muted);
+}
+
+.nav-btn::after {
+    @apply absolute bottom-0 left-1/2 transform -translate-x-1/2 h-0.5 bg-gradient-to-r from-orange-500 to-red-500 rounded-full;
+    width: 0;
+    transition: width 0.3s ease;
+    content: '';
+}
+
+.nav-btn:hover {
+    background: rgba(255, 107, 53, 0.1);
+    color: var(--accent-light);
+}
+
+.nav-btn.active {
+    background: rgba(255, 107, 53, 0.15);
+    color: var(--accent-light);
+}
+
+.nav-btn.active::after {
+    width: 20px;
+}
+
+/* ============================================
+   Spinner & Loading
+   ============================================ */
+
+.spinner {
+    @apply w-12 h-12 border-4 rounded-full;
+    border-color: rgba(255, 107, 53, 0.3);
+    border-top-color: var(--primary);
+    animation: spin 1.5s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ============================================
+   Hero Section
+   ============================================ */
+
+.hero-section {
+    @apply max-w-7xl mx-auto px-6 py-20 text-center;
+    animation: fadeInDown 0.8s ease-out;
+}
+
+.hero-label {
+    @apply text-orange-300 text-sm font-semibold uppercase tracking-wider mb-4;
+    animation: slideInUp 0.6s ease-out 0.1s backwards;
+}
+
+.hero-ip {
+    @apply text-6xl md:text-7xl font-bold mb-4 font-mono;
+    background: linear-gradient(135deg, #ff6b35 0%, #ff8c5a 50%, #d73502 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: slideInUp 0.6s ease-out 0.2s backwards;
+    letter-spacing: -0.02em;
+}
+
+.hero-sub {
+    @apply text-lg text-slate-400 mb-8;
+    animation: slideInUp 0.6s ease-out 0.3s backwards;
+}
+
+.hero-action {
+    @apply inline-flex gap-4;
+    animation: slideInUp 0.6s ease-out 0.4s backwards;
+}
+
+/* ============================================
+   Cards & Sections
+   ============================================ */
+
+.card {
+    @apply rounded-2xl p-6 border transition-all duration-300;
+    background: rgba(15, 23, 42, 0.5);
+    border-color: var(--border);
+    backdrop-filter: blur(10px);
+    animation: fadeIn 0.6s ease-out;
+}
+
+.card:hover {
+    background: rgba(15, 23, 42, 0.7);
+    border-color: rgba(255, 107, 53, 0.4);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(255, 107, 53, 0.1);
+}
+
+.card-title {
+    @apply text-xl font-bold text-orange-300 mb-2 flex items-center gap-2;
+}
+
+.card-desc {
+    @apply text-slate-400 text-sm mb-4;
+}
+
+.manifest {
+    @apply space-y-3;
+}
+
+.manifest-row {
+    @apply flex justify-between items-start gap-4 p-3 rounded-lg bg-white/5 border border-white/10;
+    transition: all 0.3s ease;
+}
+
+.manifest-row:hover {
+    background: rgba(255, 107, 53, 0.08);
+    border-color: rgba(255, 107, 53, 0.3);
+}
+
+.manifest-label {
+    @apply font-semibold text-slate-300 flex-shrink-0;
+}
+
+.manifest-value {
+    @apply text-right font-mono text-orange-300;
+    word-break: break-all;
+}
+
+.manifest-value.pending {
+    @apply text-slate-500 italic;
+}
+
+.manifest-value.loading::after {
+    content: '…';
+    animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+    0%, 20% { content: '…'; }
+    40% { content: '…'; }
+    60% { content: '…'; }
+    80% { content: '…'; }
+}
+
+/* ============================================
+   Badge System
+   ============================================ */
+
+.badge {
+    @apply inline-flex items-center gap-2 px-3 py-2 rounded-lg font-semibold text-sm border transition-all duration-300;
+    background: rgba(15, 23, 42, 0.5);
+}
+
+.led {
+    @apply inline-block w-2.5 h-2.5 rounded-full;
+    animation: pulse 2s infinite;
+}
+
+.badge.unknown {
+    @apply border-slate-600;
+    background: rgba(100, 116, 139, 0.1);
+}
+
+.badge.unknown .led {
+    @apply bg-slate-500;
+}
+
+.badge.false {
+    @apply border-green-600/40 bg-green-500/10;
+}
+
+.badge.false .led {
+    @apply bg-green-500;
+}
+
+.badge.true {
+    @apply border-orange-600/40 bg-orange-500/20;
+}
+
+.badge.true .led {
+    @apply bg-orange-500;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* ============================================
+   Buttons
+   ============================================ */
+
+.btn {
+    @apply px-6 py-3 rounded-xl font-semibold transition-all duration-300 inline-flex items-center gap-2;
+    border: 1px solid var(--border);
+}
+
+.btn-primary {
+    @apply bg-gradient-to-r from-orange-500 to-red-600 text-white border-orange-400/50;
+    box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+}
+
+.btn-secondary {
+    @apply bg-slate-800/50 text-slate-200 border-slate-700/50;
+}
+
+.btn-secondary:hover {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: rgba(255, 107, 53, 0.3);
+    color: var(--accent-light);
+}
+
+/* ============================================
+   Grid Layout
+   ============================================ */
+
+.grid-responsive {
+    @apply grid gap-6;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+/* ============================================
+   Animations
+   ============================================ */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes shimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.shimmer {
+    animation: shimmer 2s infinite;
+    background: linear-gradient(90deg, rgba(255,107,53,0.1), rgba(255,107,53,0.2), rgba(255,107,53,0.1));
+    background-size: 200% 100%;
+}
+
+/* ============================================
+   Utility
+   ============================================ */
+
+.cursor {
+    @apply inline-block w-0.5 h-12 bg-orange-400 ml-1 animate-pulse;
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, #ff6b35 0%, #d73502 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.glow {
+    box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
+}
+
+/* ============================================
+   Responsive
+   ============================================ */
+
+@media (max-width: 768px) {
+    .hero-ip {
+        @apply text-4xl;
+    }
+
+    .hero-label {
+        @apply text-xs;
+    }
+
+    .card {
+        @apply p-4;
+    }
+
+    .manifest-row {
+        @apply flex-col gap-1;
+    }
+
+    .manifest-value {
+        @apply text-left;
+    }
+
+    .grid-responsive {
+        @apply grid-cols-1;
+    }
+}
+
+/* ============================================
+   Dark Mode Adjustments
+   ============================================ */
+
+::selection {
+    background: rgba(255, 107, 53, 0.3);
+    color: var(--text-primary);
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-darker);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 107, 53, 0.4);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 107, 53, 0.6);
+}
