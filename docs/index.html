@@ -1,179 +1,91 @@
-<!DOCTYPE html>
-<html lang="it" class="dark">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SixDev - Developer Dashboard & DNS Inspector</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          colors: {
-            brand: '#10b981',
-          }
-        }
-      }
-    }
-  </script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Modern client-side IP, connection and WHOIS/RDAP inspector.">
+  <title>IP Inspector</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen font-sans flex flex-col justify-between">
-
-  <!-- Header -->
-  <header class="border-b border-slate-800 bg-slate-950/50 backdrop-blur p-4">
-    <div class="max-w-5xl mx-auto flex justify-between items-center">
-      <div class="flex items-center space-x-3">
-        <span class="bg-emerald-500 text-slate-950 font-black px-2.5 py-1 rounded-lg text-lg">6</span>
-        <h1 class="text-xl font-bold tracking-tight text-white">sixdev<span class="text-emerald-400">.org</span></h1>
-      </div>
-      <span class="text-xs font-mono bg-slate-800 text-emerald-400 border border-emerald-500/20 px-3 py-1 rounded-full">
-        GitHub Pages: Active
-      </span>
-    </div>
+<body>
+  <div class="bg"></div>
+  <header class="topbar">
+    <a class="brand" href="#">
+      <span class="brand-mark">⌁</span>
+      <span>IP Inspector</span>
+    </a>
+    <span class="status"><i></i> Static / GitHub Pages ready</span>
   </header>
 
-  <!-- Main Content -->
-  <main class="max-w-5xl mx-auto p-6 w-full flex-grow space-y-8">
+  <main class="container">
+    <section class="hero">
+      <div>
+        <p class="eyebrow">CONNECTION DIAGNOSTICS</p>
+        <h1>Know how the internet sees you.</h1>
+        <p class="subtitle">
+          Your public IPs, geolocation, reverse DNS and proxy/VPN indicators —
+          directly from your browser.
+        </p>
+      </div>
+      <button id="refreshBtn" class="button primary">↻ Refresh</button>
+    </section>
 
-    <!-- Hero / Intro -->
-    <div class="text-center space-y-3 py-4">
-      <h2 class="text-3xl font-extrabold text-white">GitHub Repo & DNS Quick Inspector</h2>
-      <p class="text-slate-400 text-sm max-w-lg mx-auto">
-        Verifica al volo lo stato di salute di un repository GitHub e ispeziona i record DNS pubblici senza lasciare il browser.
-      </p>
-    </div>
+    <section id="ipGrid" class="ip-grid" aria-live="polite">
+      <article class="card ip-card loading">
+        <div class="card-head"><span>IPv4</span><span class="pill">checking</span></div>
+        <div class="skeleton big"></div>
+        <div class="skeleton"></div>
+      </article>
+      <article class="card ip-card loading">
+        <div class="card-head"><span>IPv6</span><span class="pill">checking</span></div>
+        <div class="skeleton big"></div>
+        <div class="skeleton"></div>
+      </article>
+    </section>
 
-    <!-- Search Bar -->
-    <div class="bg-slate-800/50 border border-slate-700/60 rounded-2xl p-4 shadow-xl max-w-2xl mx-auto">
-      <form id="inspectForm" class="flex flex-col sm:flex-row gap-3">
-        <input 
-          type="text" 
-          id="repoInput" 
-          placeholder="es. teslazap/teslazap.github.io" 
-          value="teslazap/teslazap.github.io"
-          class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-emerald-500 text-white placeholder-slate-500 font-mono"
-          required
-        >
-        <button 
-          type="submit" 
-          class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-6 py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/10 active:scale-95"
-        >
-          Ispeziona
-        </button>
+    <section class="section-head">
+      <div>
+        <p class="eyebrow">CONNECTION</p>
+        <h2>How are you connected?</h2>
+      </div>
+    </section>
+    <section id="connectionCard" class="card connection-card">
+      <div class="connection-main">
+        <div id="connectionIcon" class="connection-icon">?</div>
+        <div>
+          <h3 id="connectionTitle">Checking connection…</h3>
+          <p id="connectionText">Collecting information from public IP services.</p>
+        </div>
+      </div>
+      <div id="connectionDetails" class="details-grid"></div>
+    </section>
+
+    <section class="section-head whois-head">
+      <div>
+        <p class="eyebrow">RDAP / WHOIS</p>
+        <h2>Look up an IP or domain</h2>
+        <p>Uses the public RDAP ecosystem. No server-side component is required.</p>
+      </div>
+    </section>
+
+    <section class="card lookup">
+      <form id="lookupForm">
+        <label for="lookupInput">IP address or domain</label>
+        <div class="search-row">
+          <input id="lookupInput" autocomplete="off" spellcheck="false"
+                 placeholder="e.g. 1.1.1.1 or example.com" required>
+          <button class="button primary" type="submit">Look up</button>
+        </div>
       </form>
-    </div>
+      <div id="lookupResult" class="lookup-result hidden"></div>
+    </section>
 
-    <!-- Results Grid -->
-    <div id="results" class="hidden grid md:grid-cols-2 gap-6">
-
-      <!-- Card 1: Repo Stats -->
-      <div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-6 space-y-4">
-        <div class="flex justify-between items-start">
-          <div>
-            <h3 id="repoTitle" class="text-lg font-bold text-white font-mono">---</h3>
-            <p id="repoDesc" class="text-xs text-slate-400 mt-1">---</p>
-          </div>
-          <span id="repoStars" class="bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs font-mono px-2.5 py-1 rounded-md">
-            ★ 0
-          </span>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3 text-xs font-mono pt-2">
-          <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
-            <span class="text-slate-500 block">Default Branch</span>
-            <span id="repoBranch" class="text-slate-200 font-semibold">---</span>
-          </div>
-          <div class="bg-slate-900/60 p-3 rounded-lg border border-slate-800">
-            <span class="text-slate-500 block">License</span>
-            <span id="repoLicense" class="text-slate-200 font-semibold">---</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Card 2: DNS Inspector (via Google DoH) -->
-      <div class="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-6 space-y-4">
-        <h3 class="text-lg font-bold text-white flex items-center justify-between">
-          <span>DNS Check <span class="text-xs font-normal text-slate-400">(sixdev.org)</span></span>
-          <span class="text-xs text-emerald-400 font-mono">DoH Verified</span>
-        </h3>
-
-        <div id="dnsResults" class="space-y-2 text-xs font-mono">
-          <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800 flex justify-between items-center">
-            <span class="text-slate-400">Record A (IPv4):</span>
-            <span id="dnsA" class="text-emerald-400">Controllo...</span>
-          </div>
-          <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800 flex justify-between items-center">
-            <span class="text-slate-400">Record AAAA (IPv6):</span>
-            <span id="dnsAAAA" class="text-emerald-400">Controllo...</span>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
+    <footer>
+      <span>IP Inspector · static client-side application</span>
+      <span>IP/geo data provided by public services · RDAP for registration data</span>
+    </footer>
   </main>
 
-  <!-- Footer -->
-  <footer class="border-t border-slate-800 bg-slate-950 p-6 text-center text-xs text-slate-500">
-    <p>Hosted on <a href="https://pages.github.com" class="text-slate-400 hover:underline">GitHub Pages</a> | Domain: <span class="font-mono text-emerald-400">sixdev.org</span></p>
-  </footer>
-
-  <!-- Script Logica -->
-  <script>
-    const form = document.getElementById('inspectForm');
-    const results = document.getElementById('results');
-
-    async function inspectRepo(repoPath) {
-      results.classList.remove('hidden');
-
-      // 1. Fetch GitHub API
-      try {
-        const res = await fetch(`https://api.github.com/repos/${repoPath}`);
-        if(res.ok) {
-          const data = await res.json();
-          document.getElementById('repoTitle').textContent = data.full_name;
-          document.getElementById('repoDesc').textContent = data.description || 'Nessuna descrizione presente';
-          document.getElementById('repoStars').textContent = `★ ${data.stargazers_count}`;
-          document.getElementById('repoBranch').textContent = data.default_branch;
-          document.getElementById('repoLicense').textContent = data.license ? data.license.spdx_id : 'Nessuna';
-        } else {
-          document.getElementById('repoTitle').textContent = 'Repository non trovato';
-        }
-      } catch(err) {
-        console.error('Errore GitHub API:', err);
-      }
-
-      // 2. Fetch DNS via Google DNS over HTTPS API
-      try {
-        const aRes = await fetch('https://dns.google/resolve?name=sixdev.org&type=A');
-        const aData = await aRes.json();
-        const aCount = aData.Answer ? aData.Answer.length : 0;
-        document.getElementById('dnsA').textContent = `${aCount} IP Risolti (OK)`;
-
-        const aaaaRes = await fetch('https://dns.google/resolve?name=sixdev.org&type=AAAA');
-        const aaaaData = await aaaaRes.json();
-        const aaaaCount = aaaaData.Answer ? aaaaData.Answer.length : 0;
-        document.getElementById('dnsAAAA').textContent = `${aaaaCount} IP Risolti (OK)`;
-      } catch(err) {
-        console.error('Errore DoH API:', err);
-        document.getElementById('dnsA').textContent = 'Errore query';
-      }
-    }
-
-    // Gestione Submit Form
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const input = document.getElementById('repoInput').value.trim();
-      if(!input.includes('/')) return alert('Inserisci il formato username/repository (es. teslazap/teslazap.github.io)');
-      
-      inspectRepo(input);
-    });
-
-    // Esecuzione singola e sicura all'avvio della pagina
-    window.addEventListener('DOMContentLoaded', () => {
-      inspectRepo('teslazap/teslazap.github.io');
-    });
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
