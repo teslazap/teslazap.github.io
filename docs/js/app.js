@@ -2,119 +2,294 @@
 const scanner = {
     async refresh() {
         try {
+          
+            // ---------------------------------------------------------
             // Get IPv4
-            const ipv4Res = await fetch('https://api.ipify.org?format=json');
+            // ---------------------------------------------------------
+            const ipv4Res = await fetch(
+                'https://api.ipify.org?format=json'
+            );
+
+            if (!ipv4Res.ok) {
+                throw new Error('Unable to detect IPv4 address');
+            }
+
             const { ip: ipv4 } = await ipv4Res.json();
+
             document.getElementById('ipv4').textContent = ipv4;
 
-            // Get IPv6 (non-blocking)
-            fetch('https://api6.ipify.org?format=json')
-                .then(r => r.json())
-                .then(data => {
-                    document.getElementById('ipv6').textContent = `IPv6: ${data.ip}`;
-                })
-                .catch(() => {
-                    document.getElementById('ipv6').textContent = 'IPv6: Not available';
-                });
 
+            // ---------------------------------------------------------
+            // Get IPv6 (non-blocking)
+            // ---------------------------------------------------------
+            let ipv6 = null;
+
+            try {
+                const ipv6Res = await fetch(
+                    'https://api6.ipify.org?format=json'
+                );
+
+                if (ipv6Res.ok) {
+                    const data = await ipv6Res.json();
+
+                    if (data.ip) {
+                        ipv6 = data.ip;
+
+                        document.getElementById('ipv6').textContent =
+                            `IPv6: ${ipv6}`;
+                    } else {
+                        document.getElementById('ipv6').textContent =
+                            'IPv6: Not available';
+                    }
+                } else {
+                    document.getElementById('ipv6').textContent =
+                        'IPv6: Not available';
+                }
+            } catch (error) {
+                document.getElementById('ipv6').textContent =
+                    'IPv6: Not available';
+            }
+
+
+            // ---------------------------------------------------------
             // Get geo data
-            const geoRes = await fetch(`https://ipwho.is/${ipv4}`);
+            // ---------------------------------------------------------
+            const geoRes = await fetch(
+                `https://ipwho.is/${ipv4}`
+            );
+
+            if (!geoRes.ok) {
+                throw new Error('Unable to retrieve geolocation data');
+            }
+
             const geo = await geoRes.json();
 
             console.log('Full geo data:', geo); // DEBUG
 
-            document.getElementById('country').textContent = geo.country || 'N/A';
-            document.getElementById('city').textContent = geo.city || 'N/A';
-            
-            // Timezone - extract just the ID
+
+            // ---------------------------------------------------------
+            // Basic location information
+            // ---------------------------------------------------------
+            document.getElementById('country').textContent =
+                geo.country || 'N/A';
+
+            document.getElementById('city').textContent =
+                geo.city || 'N/A';
+
+
+            // ---------------------------------------------------------
+            // Timezone
+            // ---------------------------------------------------------
             let tz = 'N/A';
+
             if (geo.timezone?.id) {
                 tz = geo.timezone.id;
             } else if (typeof geo.timezone === 'string') {
                 tz = geo.timezone;
             }
-            document.getElementById('timezone').textContent = tz;
-            
-            document.getElementById('coords').textContent = geo.latitude && geo.longitude 
-                ? `${geo.latitude.toFixed(4)}, ${geo.longitude.toFixed(4)}`
-                : 'N/A';
-            document.getElementById('isp').textContent = geo.connection?.isp || 'N/A';
-            document.getElementById('asn').textContent = geo.connection?.asn || 'N/A';
-            
-            // Hostname - try reverse DNS lookup for both IPv4 and IPv6
-            this.getHostname(ipv4, 'hostname');
-            
-            // Get IPv6 hostname when available
-            fetch('https://api6.ipify.org?format=json')
-                .then(r => r.json())
-                .then(data => {
-                    if (data.ip) {
-                        this.getHostname(data.ip, 'hostname-ipv6');
-                    }
-                })
-                .catch(() => {
-                    document.getElementById('hostname-ipv6').textContent = 'N/A';
-                });
 
+            document.getElementById('timezone').textContent = tz;
+
+
+            // ---------------------------------------------------------
+            // Coordinates
+            // ---------------------------------------------------------
+            document.getElementById('coords').textContent =
+                geo.latitude != null && geo.longitude != null
+                    ? `${geo.latitude.toFixed(4)}, ${geo.longitude.toFixed(4)}`
+                    : 'N/A';
+
+
+            // ---------------------------------------------------------
+            // ISP / ASN
+            // ---------------------------------------------------------
+            document.getElementById('isp').textContent =
+                geo.connection?.isp || 'N/A';
+
+            document.getElementById('asn').textContent =
+                geo.connection?.asn || 'N/A';
+
+
+            // ---------------------------------------------------------
+            // Reverse DNS
+            //
+            // Use our own server-side hostname lookup API.
+            //
+            // The request is made as a single batch:
+            //
+            //   /hostname-lookup.php?ip=IPv4,IPv6
+            //
+            // This avoids multiple external reverse-DNS services
+            // being called directly from the browser.
+            // ---------------------------------------------------------
+            await this.getHostnames(ipv4, ipv6);
+
+
+            // ---------------------------------------------------------
             // Security badges
+            // ---------------------------------------------------------
             const badges = [
-                { label: 'Proxy', status: geo.is_proxy },
-                { label: 'VPN', status: geo.is_vpn },
-                { label: 'Tor', status: geo.is_tor },
-                { label: 'Datacenter', status: geo.is_datacenter }
+                {
+                    label: 'Proxy',
+                    status: geo.is_proxy
+                },
+                {
+                    label: 'VPN',
+                    status: geo.is_vpn
+                },
+                {
+                    label: 'Tor',
+                    status: geo.is_tor
+                },
+                {
+                    label: 'Datacenter',
+                    status: geo.is_datacenter
+                }
             ];
 
             const badgesHtml = badges.map(b => {
-                const text = b.status ? `⚠️ ${b.label} Detected` : `✓ ${b.label} Not Detected`;
-                const className = b.status ? 'warning' : 'safe';
-                return `<span class="badge ${className}">${text}</span>`;
+                const text = b.status
+                    ? `⚠️ ${b.label} Detected`
+                    : `✓ ${b.label} Not Detected`;
+
+                const className = b.status
+                    ? 'warning'
+                    : 'safe';
+
+                return `
+                    <span class="badge ${className}">
+                        ${text}
+                    </span>
+                `;
             }).join('');
 
-            document.getElementById('security-badges').innerHTML = badgesHtml;
+            document.getElementById('security-badges').innerHTML =
+                badgesHtml;
 
         } catch (error) {
             console.error('Error:', error);
-            alert('Error detecting network info: ' + error.message);
+
+            alert(
+                'Error detecting network info: ' +
+                error.message
+            );
         }
     },
 
-    async getHostname(ip, elementId) {
+
+    // ---------------------------------------------------------
+    // Reverse DNS lookup for IPv4 + IPv6
+    // ---------------------------------------------------------
+    async getHostnames(ipv4, ipv6) {
+        const hostnameIPv4 =
+            document.getElementById('hostname');
+
+        const hostnameIPv6 =
+            document.getElementById('hostname-ipv6');
+
+
+        // Set initial state
+        if (hostnameIPv4) {
+            hostnameIPv4.textContent = 'Looking up...';
+        }
+
+        if (hostnameIPv6) {
+            hostnameIPv6.textContent =
+                ipv6 ? 'Looking up...' : 'N/A';
+        }
+
+
+        // Build the batch request
+        const addresses = [ipv4];
+
+        if (ipv6) {
+            addresses.push(ipv6);
+        }
+
+        const query = addresses.join(',');
+
+
         try {
-            // Try api.hackertarget.com for reverse DNS
-            const response = await fetch(`https://api.hackertarget.com/reversedns/?q=${ip}`);
-            const data = await response.text();
-            
-            if (data && !data.includes('error') && !data.includes('API LIMIT')) {
-                const hostname = data.trim().split('\n')[0];
-                if (hostname && hostname.length > 0) {
-                    document.getElementById(elementId).textContent = hostname;
-                    return;
+            const response = await fetch(
+                `https://myip.bartali.net/hostname-lookup.php?ip=${encodeURIComponent(query)}`
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    `Hostname API returned HTTP ${response.status}`
+                );
+            }
+
+            const data = await response.json();
+
+            console.log(
+                'Reverse DNS data:',
+                data
+            );
+
+
+            // -----------------------------------------------------
+            // Normalize the API response.
+            //
+            // For one address the API returns:
+            //
+            //   { ip, hostname, ... }
+            //
+            // For multiple addresses:
+            //
+            //   { results: [...] }
+            // -----------------------------------------------------
+            const results = Array.isArray(data.results)
+                ? data.results
+                : [data];
+
+
+            // -----------------------------------------------------
+            // Find IPv4 result
+            // -----------------------------------------------------
+            const ipv4Result = results.find(
+                result => result.ip === ipv4
+            );
+
+            if (hostnameIPv4) {
+                hostnameIPv4.textContent =
+                    ipv4Result?.hostname ||
+                    'Not available';
+            }
+
+
+            // -----------------------------------------------------
+            // Find IPv6 result
+            // -----------------------------------------------------
+            if (ipv6) {
+                const ipv6Result = results.find(
+                    result => result.ip === ipv6
+                );
+
+                if (hostnameIPv6) {
+                    hostnameIPv6.textContent =
+                        ipv6Result?.hostname ||
+                        'Not available';
                 }
             }
-            
-            // Try ipapi.co
-            const response2 = await fetch(`https://ipapi.co/${ip}/json/`);
-            const data2 = await response2.json();
-            
-            if (data2.hostname && data2.hostname !== 'Not found') {
-                document.getElementById(elementId).textContent = data2.hostname;
-                return;
-            }
-            
-            // Try ipwho.is as last resort
-            const response3 = await fetch(`https://ipwho.is/${ip}`);
-            const data3 = await response3.json();
-            
-            if (data3.connection?.hostname) {
-                document.getElementById(elementId).textContent = data3.connection.hostname;
-                return;
-            }
-            
-            document.getElementById(elementId).textContent = 'Not available';
-            
+
         } catch (error) {
-            console.log('Hostname lookup failed for', ip, error);
-            document.getElementById(elementId).textContent = 'Not available';
+            console.error(
+                'Hostname lookup failed:',
+                error
+            );
+
+            if (hostnameIPv4) {
+                hostnameIPv4.textContent =
+                    'Not available';
+            }
+
+            if (hostnameIPv6) {
+                hostnameIPv6.textContent =
+                    ipv6
+                        ? 'Not available'
+                        : 'N/A';
+            }
         }
     }
 };
