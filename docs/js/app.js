@@ -41,8 +41,20 @@ const scanner = {
             document.getElementById('isp').textContent = geo.connection?.isp || 'N/A';
             document.getElementById('asn').textContent = geo.connection?.asn || 'N/A';
             
-            // Hostname - try reverse DNS lookup
-            this.getHostname(ipv4);
+            // Hostname - try reverse DNS lookup for both IPv4 and IPv6
+            this.getHostname(ipv4, 'hostname');
+            
+            // Get IPv6 hostname when available
+            fetch('https://api6.ipify.org?format=json')
+                .then(r => r.json())
+                .then(data => {
+                    if (data.ip) {
+                        this.getHostname(data.ip, 'hostname-ipv6');
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('hostname-ipv6').textContent = 'N/A';
+                });
 
             // Security badges
             const badges = [
@@ -66,28 +78,28 @@ const scanner = {
         }
     },
 
-    async getHostname(ip) {
+    async getHostname(ip, elementId) {
         try {
             // Try ip-api.com for reverse DNS (supports CORS)
             const response = await fetch(`https://ip-api.com/json/${ip}?fields=reverse`);
             const data = await response.json();
             
             if (data.reverse && data.reverse !== 'empty') {
-                document.getElementById('hostname').textContent = data.reverse;
+                document.getElementById(elementId).textContent = data.reverse;
             } else {
                 // Try alternative: ipwhois.io (another CORS-friendly service)
                 const response2 = await fetch(`https://ipwho.is/${ip}`);
                 const data2 = await response2.json();
                 
                 if (data2.connection?.hostname) {
-                    document.getElementById('hostname').textContent = data2.connection.hostname;
+                    document.getElementById(elementId).textContent = data2.connection.hostname;
                 } else {
-                    document.getElementById('hostname').textContent = 'Not available';
+                    document.getElementById(elementId).textContent = 'Not available';
                 }
             }
         } catch (error) {
-            console.log('Hostname lookup failed:', error);
-            document.getElementById('hostname').textContent = 'Not available';
+            console.log('Hostname lookup failed for', ip, error);
+            document.getElementById(elementId).textContent = 'Not available';
         }
     }
 };
