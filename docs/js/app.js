@@ -12,7 +12,8 @@ const app = {
     async init() {
         console.log('PROBE initialized');
         this.navigate('scanner');
-        this.fetchAllData();
+        this.render(); // Render UI immediately with "Detecting..." placeholders
+        this.fetchAllData(); // Then fetch data
     },
 
     navigate(page) {
@@ -258,7 +259,7 @@ const app = {
             this.data.geo = {
                 country: geoData.country || 'N/A',
                 city: geoData.city || 'N/A',
-                timezone: geoData.timezone || 'N/A',
+                timezone: geoData.timezone_name || geoData.timezone || 'N/A',
                 latitude: geoData.latitude,
                 longitude: geoData.longitude,
                 isp: geoData.connection?.isp || 'N/A',
@@ -318,14 +319,7 @@ const app = {
             }
             
             document.getElementById('whois-result').classList.remove('hidden');
-            
-            if (data.raw) {
-                // For XML responses
-                document.getElementById('whois-content').textContent = data.raw.substring(0, 2000) + '\n... (truncated)';
-            } else {
-                // For JSON responses
-                document.getElementById('whois-content').textContent = JSON.stringify(data, null, 2);
-            }
+            document.getElementById('whois-content').innerHTML = this.formatRdapData(data);
         } catch (error) {
             console.error('RDAP error:', error);
             alert('RDAP search error: ' + error.message);
@@ -334,7 +328,105 @@ const app = {
         }
     },
 
-    copyToClipboard() {
+    formatRdapData(data) {
+        if (data.raw) {
+            return `<div class="space-y-4">${this.escapeHtml(data.raw).split('\n').map(line => 
+                `<p class="text-sm text-slate-300 font-mono">${line}</p>`
+            ).join('')}</div>`;
+        }
+        
+        // Format JSON data into human-readable cards
+        let html = '<div class="space-y-4">';
+        
+        // Handle domain data
+        if (data.handle || data.ldhName) {
+            html += `<div class="card"><h4 class="font-semibold text-orange-400 mb-2">📋 Domain/Registry Handle</h4>
+                <p class="text-slate-300"><strong>Handle:</strong> ${this.escapeHtml(data.handle || data.ldhName)}</p></div>`;
+        }
+        
+        // Handle IP network data
+        if (data.startAddress || data.endAddress) {
+            html += `<div class="card"><h4 class="font-semibold text-orange-400 mb-2">🌐 IP Network Range</h4>
+                <p class="text-slate-300"><strong>Start:</strong> ${this.escapeHtml(data.startAddress || 'N/A')}</p>
+                <p class="text-slate-300"><strong>End:</strong> ${this.escapeHtml(data.endAddress || 'N/A')}</p>
+                ${data.cidrPrefix ? `<p class="text-slate-300"><strong>CIDR:</strong> /${data.cidrPrefix}</p>` : ''}</div>`;
+        }
+        
+        // Entities (registrar, registrant, etc.)
+        if (data.entities && Array.isArray(data.entities)) {
+            data.entities.forEach((entity, idx) => {
+                if (entity.vcardArray && entity.vcardArray[1]) {
+                    const vcard = entity.vcardArray[1];
+                    let name = 'Unknown', org = '', email = '';
+                    
+                    vcard.forEach(prop => {
+                        if (prop[0] === 'fn') name = prop[3];
+                        if (prop[0] === 'org') org = prop[3];
+                        if (prop[0] === 'email') email = prop[3];
+                    });
+                    
+                    if (name && name !== 'Unknown') {
+                        html += `<div class="card"><h4 class="font-semibold text-orange-400 mb-2">👤 ${entity.roles?.join(', ') || 'Entity ' + (idx+1)}</h4>
+                            <p class="text-slate-300"><strong>Name:</strong> ${this.escapeHtml(name)}</p>
+                            ${org ? `<p class="text-slate-300"><strong>Organization:</strong> ${this.escapeHtml(org)}</p>` : ''}
+                            ${email ? `<p class="text-slate-300"><strong>Email:</strong> ${this.escapeHtml(email)}</p>` : ''}
+                        </div>`;
+                    }
+                }
+            });
+        }
+        
+        // Registrar/Events
+        if (data.registrar) {
+            html += `<div class="card"><h4 class="font-semibold text-orange-400 mb-2">🏢 Registrar</h4>
+                <p class="text-slate-300">${this.escapeHtml(JSON.stringify(data.registrar, null, 2))}</p></div>`;
+        }
+        
+        // Events (creation, update, expiration)
+        if (data.events && Array.isArray(data.events)) {
+            html += `<div class="card"><h4 class="font-semibold text-orange-400 mb-2">📅 Important Dates</h4>`;
+            data.events.forEach(event => {
+                if (event.eventAction && event.eventDate) {
+                    const action = event.eventAction.toUpperCase();
+                    const date = new Date(event.eventDate).toLocaleDateString();
+                    html += `<p class="text-slate-300"><strong>${action}:</strong> ${date}</p>`;
+                }
+            });
+            html += `</div>`;
+        }
+        
+        // Status
+        if (data.status && Array.isArray(data.status)) {
+            html += `<div class="card"><h4 class="font-semibold text-orange-400 mb-2">⚙️ Status</h4>
+                <p class="text-slate-300">${this.escapeHtml(data.status.join(', '))}</p></div>`;
+        }
+        
+        // Notices
+        if (data.notices && Array.isArray(data.notices)) {
+            html += `<div class="card"><h4 class="font-semibold text-orange-400 mb-2">ℹ️ Notices</h4>`;
+            data.notices.forEach(notice => {
+                if (notice.title) {
+                    html += `<p class="text-slate-300 text-sm"><strong>${this.escapeHtml(notice.title)}</strong></p>`;
+                }
+            });
+            html += `</div>`;
+        }
+        
+        // Raw JSON if nothing matched
+        if (!html.includes('card')) {
+            html += `<div class="card"><h4 class="font-semibold text-orange-400 mb-2">📊 Raw Data</h4>
+                <pre class="text-xs text-slate-300 bg-slate-900/50 p-4 rounded-lg overflow-auto max-h-96">${this.escapeHtml(JSON.stringify(data, null, 2))}</pre></div>`;
+        }
+        
+        html += '</div>';
+        return html;
+    },
+    
+    escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    },
         navigator.clipboard.writeText(this.data.ipv4 || '').then(() => {
             alert('IP copied: ' + this.data.ipv4);
         });
