@@ -80,23 +80,35 @@ const scanner = {
 
     async getHostname(ip, elementId) {
         try {
-            // Try ip-api.com for reverse DNS (supports CORS)
-            const response = await fetch(`https://ip-api.com/json/${ip}?fields=reverse`);
+            // Try ipapi.co first - excellent for reverse DNS
+            const response = await fetch(`https://ipapi.co/${ip}/json/`);
             const data = await response.json();
             
-            if (data.reverse && data.reverse !== 'empty') {
-                document.getElementById(elementId).textContent = data.reverse;
-            } else {
-                // Try alternative: ipwhois.io (another CORS-friendly service)
-                const response2 = await fetch(`https://ipwho.is/${ip}`);
-                const data2 = await response2.json();
-                
-                if (data2.connection?.hostname) {
-                    document.getElementById(elementId).textContent = data2.connection.hostname;
-                } else {
-                    document.getElementById(elementId).textContent = 'Not available';
-                }
+            if (data.hostname && data.hostname !== 'Not found') {
+                document.getElementById(elementId).textContent = data.hostname;
+                return;
             }
+            
+            // Try ip-api.com as fallback
+            const response2 = await fetch(`https://ip-api.com/json/${ip}?fields=reverse`);
+            const data2 = await response2.json();
+            
+            if (data2.reverse && data2.reverse !== 'empty') {
+                document.getElementById(elementId).textContent = data2.reverse;
+                return;
+            }
+            
+            // If still nothing, try ipwho.is
+            const response3 = await fetch(`https://ipwho.is/${ip}`);
+            const data3 = await response3.json();
+            
+            if (data3.connection?.hostname) {
+                document.getElementById(elementId).textContent = data3.connection.hostname;
+                return;
+            }
+            
+            document.getElementById(elementId).textContent = 'Not available';
+            
         } catch (error) {
             console.log('Hostname lookup failed for', ip, error);
             document.getElementById(elementId).textContent = 'Not available';
