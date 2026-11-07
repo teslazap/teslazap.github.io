@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Background: dark rounded square -->
+  <rect width="64" height="64" rx="14" fill="#0f1626"/>
+  <!-- The 6: bowl and hook drawn with thick strokes -->
+  <circle cx="25" cy="40" r="11" fill="none" stroke="#fff" stroke-width="9"/>
+  <path d="M14 40C14 24 21 13 35 12" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round"/>
+  <!-- Terminal cursor -->
+  <rect x="43" y="49" width="12" height="7" fill="#f2c230"/>
+</svg>
