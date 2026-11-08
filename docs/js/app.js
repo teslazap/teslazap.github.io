@@ -30,13 +30,21 @@ async function getText(url, ms = 6000) {
 const ownIp = (host, fam) => getText(`https://${host}/api/myip.php`)
   .then((s) => (/^[0-9a-f.:]{2,45}$/i.test(s) && (fam === 6 ? s.includes(":") : !s.includes(":")) ? s : null))
   .catch(() => null);
-
+/*
 async function geoMap(ips) {
   if (!ips.length) return {};
   try {
     const d = await getJSON(`${API}geo.php?ip=${encodeURIComponent(ips.join(","))}`);
     return d.results || {};
   } catch { return {}; }
+}
+*/
+async function geoMap(ips) {
+  if (!ips.length) return {};
+  try {
+    const d = await getJSON(`${API}geo.php?ip=${encodeURIComponent(ips.join(","))}`);
+    return d.results || {};
+  } catch (e) { console.error("geo.php failed:", e); return {}; }
 }
 
 async function hostnames(ips) {
@@ -45,9 +53,18 @@ async function hostnames(ips) {
     const d = await getJSON(`${API}hostname-lookup.php?ip=${encodeURIComponent(ips.join(","))}`);
     const list = Array.isArray(d.results) ? d.results : [d];
     return Object.fromEntries(list.map((r) => [r.ip, r.hostname]));
+  } catch (e) { console.error("hostname-lookup.php failed:", e); return {}; }
+}
+/*
+async function hostnames(ips) {
+  if (!ips.length) return {};
+  try {
+    const d = await getJSON(`${API}hostname-lookup.php?ip=${encodeURIComponent(ips.join(","))}`);
+    const list = Array.isArray(d.results) ? d.results : [d];
+    return Object.fromEntries(list.map((r) => [r.ip, r.hostname]));
   } catch { return {}; }
 }
-
+*/
 function card(id, fam, ip, g, host) {
   const body = $(id).querySelector(".body");
   body.className = "body";
