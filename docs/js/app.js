@@ -72,6 +72,7 @@ function card(id, fam, ip, g, host) {
   const cc = (g?.country_code || "").toLowerCase();
   const rows = [
     ["City", g?.city],
+    ["Region", g?.region],
     ["Timezone", g?.timezone?.id],
     ["Coordinates", g?.latitude != null ? `${g.latitude.toFixed(2)}, ${g.longitude.toFixed(2)}` : null],
     ["ISP", g?.connection?.isp],
