@@ -16,7 +16,14 @@ async function getJSON(url, ms = 8000) {
 
 // api.ipify.org answers over IPv4 only, api6.ipify.org over IPv6 only
 const ownIp = (host) => getJSON(`https://${host}/?format=json`, 6000).then((d) => d.ip || null).catch(() => null);
-const geoOf = (ip) => getJSON(`https://ipwho.is/${ip}`).then((g) => (g.success === false ? null : g)).catch(() => null);
+
+async function geoMap(ips) {
+  if (!ips.length) return {};
+  try {
+    const d = await getJSON(`${API}geo.php?ip=${encodeURIComponent(ips.join(","))}`);
+    return d.results || {};
+  } catch { return {}; }
+}
 
 async function hostnames(ips) {
   if (!ips.length) return {};
@@ -68,13 +75,12 @@ async function scan() {
   document.querySelectorAll(".fam .body").forEach((b) => { b.className = "body muted"; b.textContent = "Detecting..."; });
   $("verdict").hidden = true;
   const [ip4, ip6] = await Promise.all([ownIp("api.ipify.org"), ownIp("api6.ipify.org")]);
-  const [g4, g6, hn] = await Promise.all([
-    ip4 ? geoOf(ip4) : null,
-    ip6 ? geoOf(ip6) : null,
+  const [geo, hn] = await Promise.all([
+    geoMap([ip4, ip6].filter(Boolean)),
     hostnames([ip4, ip6].filter(Boolean)),
   ]);
-  card("c4", "IPv4", ip4, g4, hn[ip4]);
-  card("c6", "IPv6", ip6, g6, hn[ip6]);
+  const g4 = ip4 ? geo[ip4] : null;
+  const g6 = ip6 ? geo[ip6] : null;
   verdict(g4, g6);
 }
 
