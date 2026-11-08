@@ -14,8 +14,22 @@ async function getJSON(url, ms = 8000) {
   } finally { clearTimeout(t); }
 }
 
-// api.ipify.org answers over IPv4 only, api6.ipify.org over IPv6 only
-const ownIp = (host) => getJSON(`https://${host}/?format=json`, 6000).then((d) => d.ip || null).catch(() => null);
+// Plain-text fetch with timeout, for the address-echo endpoints
+async function getText(url, ms = 6000) {
+  const ctl = new AbortController();
+  const t = setTimeout(() => ctl.abort(), ms);
+  try {
+    const r = await fetch(url, { signal: ctl.signal });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return (await r.text()).trim();
+  } finally { clearTimeout(t); }
+}
+
+// v4.ipng.za.net has only an A record, v6.ipng.za.net only an AAAA record.
+// The answer must look like an address of the expected family, otherwise it is ignored.
+const ownIp = (host, fam) => getText(`https://${host}/api/myip.php`)
+  .then((s) => (/^[0-9a-f.:]{2,45}$/i.test(s) && (fam === 6 ? s.includes(":") : !s.includes(":")) ? s : null))
+  .catch(() => null);
 
 async function geoMap(ips) {
   if (!ips.length) return {};
@@ -74,13 +88,13 @@ function verdict(g4, g6) {
 async function scan() {
   document.querySelectorAll(".fam .body").forEach((b) => { b.className = "body muted"; b.textContent = "Detecting..."; });
   $("verdict").hidden = true;
-  const [ip4, ip6] = await Promise.all([ownIp("api.ipify.org"), ownIp("api6.ipify.org")]);
-  const [geo, hn] = await Promise.all([
-    geoMap([ip4, ip6].filter(Boolean)),
-    hostnames([ip4, ip6].filter(Boolean)),
-  ]);
+  const [ip4, ip6] = await Promise.all([ownIp("v4.ipng.za.net", 4), ownIp("v6.ipng.za.net", 6)]);
+  const found = [ip4, ip6].filter(Boolean);
+  const [geo, hn] = await Promise.all([geoMap(found), hostnames(found)]);
   const g4 = ip4 ? geo[ip4] : null;
   const g6 = ip6 ? geo[ip6] : null;
+  card("c4", "IPv4", ip4, g4, hn[ip4]);
+  card("c6", "IPv6", ip6, g6, hn[ip6]);
   verdict(g4, g6);
 }
 
