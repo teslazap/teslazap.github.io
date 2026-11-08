@@ -34,7 +34,7 @@ const ownIp = (host, fam) => getText(`https://${host}/api/myip.php`)
 async function geoMap(ips) {
   if (!ips.length) return {};
   try {
-    const d = await getJSON(`${API}geo.php?ip=${encodeURIComponent(ips.join(","))}`);
+    const d = await getJSON(`${API}where.php?ip=${encodeURIComponent(ips.join(","))}`);
     return d.results || {};
   } catch { return {}; }
 }
@@ -42,9 +42,9 @@ async function geoMap(ips) {
 async function geoMap(ips) {
   if (!ips.length) return {};
   try {
-    const d = await getJSON(`${API}geo.php?ip=${encodeURIComponent(ips.join(","))}`);
+    const d = await getJSON(`${API}where.php?ip=${encodeURIComponent(ips.join(","))}`);
     return d.results || {};
-  } catch (e) { console.error("geo.php failed:", e); return {}; }
+  } catch (e) { console.error("where.php failed:", e); return {}; }
 }
 
 async function hostnames(ips) {
