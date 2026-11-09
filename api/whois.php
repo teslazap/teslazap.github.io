@@ -5,11 +5,11 @@
  */
 declare(strict_types=1);
 
-const ALLOWED_ORIGIN    = 'https://sixdev.org';
+const ALLOWED_ORIGIN    = 'https://domain.tld';
 const RATE_LIMIT_MAX    = 10;     // requests...
 const RATE_LIMIT_WINDOW = 60;     // ...per this many seconds, per client
 const CACHE_SECONDS     = 3600;
-const USER_AGENT        = 'sixdev-probe/1.0 (+https://sixdev.org)';
+const USER_AGENT        = 'sixdev-probe/1.0 (+https://domain.tld)';
 
 $TMP = dirname(__DIR__, 2) . '/tmp';   // inside the site tree (open_basedir)
 
