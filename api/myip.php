@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 header('Content-Type: text/plain; charset=utf-8');
-header('Access-Control-Allow-Origin: https://sixdev.org');
+header('Access-Control-Allow-Origin: https://domain.tld');
 header('Cache-Control: no-store');
 
 $ip = $_SERVER['REMOTE_ADDR'] ?? '';
