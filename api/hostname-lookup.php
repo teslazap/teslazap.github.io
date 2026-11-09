@@ -47,7 +47,7 @@ declare(strict_types=1);
 
 // In production, replace '*' with your exact website origin,
 // for example: 'https://example.com'.
-const ALLOWED_ORIGIN = 'https://sixdev.org';
+const ALLOWED_ORIGIN = 'https://domain.tld';
 
 const RATE_LIMIT_ENABLED = true;
 const RATE_LIMIT_MAX     = 20;   // Maximum requests...
