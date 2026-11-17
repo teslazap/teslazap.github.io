@@ -166,17 +166,6 @@ async function scan() {
 // WHOIS (RDAP) through the IPng server, shown in a dialog
 async function whois(ip) {
   $("wt").textContent = "WHOIS " + ip;
-  if (d.mac) {
-    const m = d.mac;
-    const mr = [
-      ["MAC address", m.address],
-      ["Vendor", m.locally_administered ? "None (locally administered address)" : (m.vendor?.organization || "Not found in the IEEE registry")],
-      ["Registry", m.vendor?.registry],
-      ["Prefix", m.vendor?.prefix],
-      ["Vendor address", m.vendor?.address],
-    ].filter((r) => r[1]);
-    h += `<h3>MAC address (IEEE)</h3><dl>${mr.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>`;
-  }
   $("wb").innerHTML = '<p class="muted">Looking up...</p>';
   $("wd").showModal();
   try {
@@ -189,7 +178,19 @@ async function whois(ip) {
     ].filter((r) => r[1]);
     let h = `<dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>`;
 
-    
+    // MAC address embedded in an EUI-64 IPv6 address, with IEEE vendor
+    if (d.mac) {
+      const m = d.mac;
+      const mr = [
+        ["MAC address", m.address],
+        ["Vendor", m.locally_administered ? "None (locally administered address)" : (m.vendor?.organization || "Not found in the IEEE registry")],
+        ["Registry", m.vendor?.registry],
+        ["Prefix", m.vendor?.prefix],
+        ["Vendor address", m.vendor?.address],
+      ].filter((r) => r[1]);
+      h += `<h3>MAC address (IEEE)</h3><dl>${mr.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>`;
+    }
+
     (d.contacts || []).forEach((c) => {
       const cr = [["Name", c.fn], ["Organization", c.org], ["Email", c.email]].filter((r) => r[1]);
       if (cr.length) h += `<h3>${esc((c.roles || ["contact"]).join(", "))}</h3><dl>${cr.map(([k, v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("")}</dl>`;
