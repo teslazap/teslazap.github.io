@@ -104,8 +104,7 @@ function iidText(ip) {
   if (!r) return null;
   if (r.kind === "eui64") {
     return `EUI-64, MAC ${r.mac}` +
-      (r.local ? " (locally administered)" : "") +
-      " (Exposed)";
+      (r.local ? " (locally administered)" : "");
   }
   if (r.kind === "low") return "Low-numbered ID (manual or DHCPv6 assignment), no MAC embedded.";
   return "Randomized, no MAC embedded.";
