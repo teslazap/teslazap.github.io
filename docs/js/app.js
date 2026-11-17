@@ -89,7 +89,7 @@ function iidInfo(ip) {
     if (!(mac[0] & 0x01)) {
       return {
         kind: "eui64",
-        mac: mac.map(hex2).join(":"),
+        mac: mac.map(hex2).join(":").toUpperCase(),
         local: (mac[0] & 0x02) !== 0,
       };
     }
@@ -105,10 +105,10 @@ function iidText(ip) {
   if (r.kind === "eui64") {
     return `EUI-64, MAC ${r.mac}` +
       (r.local ? " (locally administered)" : "") +
-      ". The MAC is exposed and stays the same on every network.";
+      ". Exposed and the same on every network.";
   }
   if (r.kind === "low") return "Low-numbered ID (manual or DHCPv6 assignment), no MAC embedded.";
-  return "Randomized, no MAC embedded (privacy extensions and stable-privacy addresses look the same).";
+  return "Randomized, no MAC embedded.";
 }
 
 function card(id, fam, ip, g, host) {
